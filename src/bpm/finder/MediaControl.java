@@ -32,6 +32,7 @@ import javafx.util.Duration;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.media.AudioSpectrumListener;
 
 public class MediaControl extends BorderPane {
 
@@ -40,6 +41,7 @@ public class MediaControl extends BorderPane {
     private FileHandler fileHandler;
     private FileChooser fc;
     private Media media;
+    private AudioAnalyzer audioAnalyzer = new AudioAnalyzer();
     @FXML private MediaView mediaView;
     private final boolean repeat = false;
     private boolean stopRequested = false;
@@ -55,9 +57,10 @@ public class MediaControl extends BorderPane {
     private static final int MINUTE_IN_SECONDS = 60;
     private static final int HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS;
 
-    public MediaControl(MediaPlayer mp, AreaChart<Number, Number> ac) {
+    public MediaControl(MediaPlayer mp) {
         
-      
+        AreaChart<Number, Number> ac = audioAnalyzer.createChart();
+        AudioSpectrumListener as = audioAnalyzer.audioSpectrumListener;
         this.mp = mp;
         setStyle("-fx-background-color: #22c7;");
         mediaView = new MediaView(mp);
@@ -141,7 +144,7 @@ public class MediaControl extends BorderPane {
             @Override
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
-
+                mediaView.getMediaPlayer().setAudioSpectrumListener(as);
                 switch (status) {
                     case UNKNOWN:
                         break;
@@ -252,7 +255,7 @@ public class MediaControl extends BorderPane {
                     Duration currentTime = mediaView.getMediaPlayer().getCurrentTime();
                     playTime.setText(formatTime(currentTime, duration));
                     timeSlider.setDisable(duration.isUnknown());
-                    System.out.println("UpdateValues");
+                    //System.out.println("UpdateValues");
 
                     if (!timeSlider.isDisabled()
                             && duration.greaterThan(Duration.ZERO)
