@@ -43,7 +43,6 @@ public class AudioPlayer extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         
-        
         //mediaPlayer.play();
     }
 

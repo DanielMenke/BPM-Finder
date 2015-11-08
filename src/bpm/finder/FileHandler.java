@@ -42,4 +42,10 @@ public class FileHandler extends BorderPane {
         }
 
     }
+    
+    public File getFile() {
+        
+        return this.file;
+        
+    }
 }

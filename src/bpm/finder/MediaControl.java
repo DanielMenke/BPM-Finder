@@ -36,6 +36,7 @@ import javafx.scene.media.AudioSpectrumListener;
 
 public class MediaControl extends BorderPane {
 
+    private BPMLocalize bpmlocalizetest;
     private MediaPlayer mp;
     private MediaPlayer track;
     private FileHandler fileHandler;
@@ -53,6 +54,7 @@ public class MediaControl extends BorderPane {
     @FXML private HBox mediaBar;
     @FXML private Button playButton;
     @FXML private Button openFileButton = new Button("OpenFile");
+    @FXML private Button runBPMLocalizeButton = new Button("BPM-Localize");
     private static final int HOUR_IN_MINUTES = 60;
     private static final int MINUTE_IN_SECONDS = 60;
     private static final int HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS;
@@ -65,6 +67,9 @@ public class MediaControl extends BorderPane {
         setStyle("-fx-background-color: #22c7;");
         mediaView = new MediaView(mp);
         fileHandler = new FileHandler();
+        
+        bpmlocalizetest = new BPMLocalize();
+        
         Pane mvPane = new Pane() {
             
         };
@@ -77,10 +82,13 @@ public class MediaControl extends BorderPane {
         mediaBar.setAlignment(Pos.CENTER);
         mediaBar.setPadding(new Insets(5, 10, 5, 10));
         BorderPane.setAlignment(mediaBar, Pos.CENTER);
-        //Add Open File Button
         
-
+        //Add Open File Button
         mediaBar.getChildren().add(openFileButton);
+        
+        // Add BPM Localize Button (for testing)
+        mediaBar.getChildren().add(runBPMLocalizeButton);
+        
         //Add play Button
         playButton = new Button(">");
         mediaBar.getChildren().add(playButton);
@@ -138,6 +146,27 @@ public class MediaControl extends BorderPane {
         mediaBar.getChildren().add(volumeSlider);
 
         //EventHandling
+        
+        //Run BPM Localize Button
+        runBPMLocalizeButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+               
+                if (bpmlocalizetest.isReady()) {
+                    
+                    
+                    
+                } else {
+                    
+                    System.out.println("BPM Localize not ready. (Missing WAV or BPM Data?)");
+                    
+                }
+
+            }
+        });
+        
+        
         //Play button event
         playButton.setOnAction(new EventHandler<ActionEvent>() {
 
@@ -181,6 +210,7 @@ public class MediaControl extends BorderPane {
                     applyListeners();
                     System.out.println(track.getCurrentTime());
                     
+                    bpmlocalizetest.setWAV(fileHandler.getFile());
                     
                     updateValues();
                 }
