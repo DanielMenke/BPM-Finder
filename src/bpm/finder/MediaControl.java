@@ -155,8 +155,11 @@ public class MediaControl extends BorderPane {
                
                 if (bpmlocalizetest.isReady()) {
                     
-                    //bpmlocalizetest.hall();
-                    bpmlocalizetest.localize(68);
+
+                    //bpmlocalizetest.bpm_detect(9700000);
+                    bpmlocalizetest.beat_detect();
+                    
+                    
                     
                 } else {
                     
