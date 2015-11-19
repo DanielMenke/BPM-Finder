@@ -8,6 +8,8 @@ package bpm.finder;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 
 
@@ -90,8 +92,7 @@ public class BPMLocalize {
                     System.out.println(e);
 
                 } 
-                       
-                
+
     }
     
     public double[][] getwavdata(int startSample, int laenge) {
@@ -154,6 +155,13 @@ public class BPMLocalize {
             int[] beats = new int[0];
             
             int segmentposition = 0;
+            int beatcountn = 0;
+            
+            int anzahl_gefundende_beats = 0;
+            
+            int buffer_voll = 0;
+            
+            List<Integer> alleBPMs = new ArrayList<Integer>();
             
             do
             {
@@ -161,6 +169,8 @@ public class BPMLocalize {
                // Segment in den Buffer laden.
                samplesRead = wavFile.readFrames(buffer, samplesStep);
                segmentposition = segmentposition+1;
+               
+               buffer_voll++;
 
                // Nur wenn noch mehr als 0 Samples gelesen wurden...
                if (samplesRead > 0) {
@@ -178,18 +188,7 @@ public class BPMLocalize {
                     }
                     EnergyInBuffer *= (1./energyBuffer.length);
 
-                    // Varianz der Energie-Werte im Energiebuffer:
-                    double EnergyBufferVarianz = 0;
-                    for (int i = 0; i < energyBuffer.length; i++) {
-                        double std = energyBuffer[i] - EnergyInBuffer;
-                        std *= std;
-                        EnergyBufferVarianz += std;
-                    }
-                    EnergyBufferVarianz *= (1./energyBuffer.length);
-                    double EnergyBufferStd = Math.sqrt(EnergyBufferVarianz);
-
-                    // Konstante C:
-                    double c = (-0.0025714*EnergyBufferStd) + 1.8142857;
+                    double c = 1.20;
                    
                     // Energie-Buffer nach rechts verschieben
                     for (int i = energyBuffer.length-1; i > 0; i--) {
@@ -197,15 +196,36 @@ public class BPMLocalize {
                     }
                     energyBuffer[0] = localEnergy;
 
+                if (buffer_voll > 43) {
+                    
                     // Beat wenn lokale Energie größer ist als c*Durchschnitt im Buffer:
                     if (localEnergy > (c*EnergyInBuffer)) {
 
-                        int[] stelle = new int[1];
-                        stelle[0] = segmentposition*samplesStep - (samplesStep/2);
-                        beats = ArrayUtils.addAll(beats, stelle);
+                        beatcountn++;
+                        
+                        if (beatcountn == 2) {
+                            // True Beat found!
+                            anzahl_gefundende_beats++;
 
+                        }
+
+                    } else {
+                        
+                        beatcountn = 0;
+                        
                     }
-
+                    
+                    if (segmentposition > (44100*5/samplesStep)) {
+                        
+                        int current_bpm = (int)((anzahl_gefundende_beats * 44100 * 60) / (segmentposition * samplesStep));
+                        alleBPMs.add(current_bpm);
+                        //System.out.println(current_bpm);
+                        segmentposition = 0;
+                        anzahl_gefundende_beats = 0;
+                        
+                    }
+                }
+                
                }
                
                
@@ -214,96 +234,14 @@ public class BPMLocalize {
 
             // WAV-Datei schließen.
             wavFile.close();
-            
-            // In Beats stehen nacheinander die Positionen (angegeben in Samples)
-            // innerhalb der Wav, an denen Beats gefunden wurden...
-            
-            
-//            double[] samplesbetween = new double[beats.length-1];
-//            for (int i = 0; i < beats.length-1; i++) {
-//                samplesbetween[i] += (beats[i+1]-beats[i]);
-//            }
-            
-//            
-//            double[] samplesbetween = new double[beats.length];
-//            for (int i = 0; i < beats.length-1; i++) {
-//                samplesbetween[i] = beats[i+1] - beats[i];
-//            }
-//            
-//            double summe = 0;
-//            for (int i = 0; i < samplesbetween.length; i++) {
-//                summe += samplesbetween[i];
-//            }
-//            double average = summe/samplesbetween.length;
-            
-//            boolean foundSth = true;
-//            while (foundSth) {
-//                foundSth = false;
-//                for (int i = 0; i < samplesbetween.length; i++) {
-//                    if (samplesbetween[i] == 1024. || samplesbetween[i] > average+1024 || samplesbetween[i] < average-1024) {
-//                        samplesbetween = ArrayUtils.remove(samplesbetween, i);
-//                        foundSth = true;
-//                        break;
-//                    }
-//                }
-//            }
-            
-//            summe = 0;
-//            for (int i = 0; i < samplesbetween.length; i++) {
-//                summe += samplesbetween[i];
-//            }
-//            average = summe/samplesbetween.length;
-            
-            
-//            double[] samplesaddbyadd = new double[samplesbetween.length+1];
-//            for (int i = 0; i <= samplesbetween.length; i++) {
-//                if (i == 0) {
-//                    samplesaddbyadd[i] = 0.;
-//                } else {
-//                    samplesaddbyadd[i] = samplesaddbyadd[i-1] + samplesbetween[i-1];
-//                }
-//            }
-            
-//            double[] doubles = new double[(samplesaddbyadd.length)*2];
-//            for(int i=0; i<samplesaddbyadd.length; i++) {
-//                int p = 2*(i);
-//                doubles[p] = (i);
-//                doubles[p+1] = samplesaddbyadd[i];
-//            }
-            
-//            RegressionResult zet = calculateLinearRegression(doubles);
-//            System.out.println(zet.formel);
-//                        
-//            double bpm = (60.*44100.)/zet.b;
-            
-//            
-//            double bpm = (60.*44100.)/average;
-//            while (bpm > 180) {
-//                bpm /= 2;
-//            }
-//            
-//            System.out.println(bpm);
-//            
 
-
+            int summe = 0;
+            for (int curBPM: alleBPMs) {
+                summe += curBPM;      
+            }
+            double averageBPM = (double) summe / alleBPMs.size();
             
-            try{
-                FileWriter fw1 = new FileWriter("beats.txt");
-                BufferedWriter bw1 = new BufferedWriter(fw1);
-
-                for (int i = 0; i < beats.length; i++) {
-                    bw1.write(Double.toString(beats[i])+"\n");
-                }
-                
-                 bw1.close();
-            } catch (Exception e) {
-            
-            System.out.println(e);
-
-             }
-            
-
-
+            System.out.println("BPM ermittelt: "+averageBPM+" BPM");
             
             
         } catch (Exception e) {
@@ -350,6 +288,13 @@ public class BPMLocalize {
             
             int segmentposition = 0;
             
+            int buffer_voll = 0;
+            int beatcountn = 0;
+            int beatinanysubband = 0;
+            int anzahl_gefundende_beats = 0;
+            
+            List<Integer> alleBPMs = new ArrayList<Integer>();
+            
             do
             {
 
@@ -360,11 +305,13 @@ public class BPMLocalize {
                // Nur wenn noch mehr als 0 Samples gelesen wurden...
                if (samplesRead > 0) {
 
+                    buffer_voll++;
+                   
                     fft.transform(buffer[0], buffer[1]);
                     for (int i = 0; i < samplesStep; i++) {
                         energyBuffer[i] = Math.sqrt(buffer[0][i]*buffer[0][i] + buffer[1][i]*buffer[1][i]);
                     }
-                    System.out.println("did fft");
+                    //System.out.println("did fft");
                     
                     boolean foundinanothersubband = false;                    
                     for (int i = 0; i < subband_energy_history.length; i++) {
@@ -386,17 +333,56 @@ public class BPMLocalize {
                         }
                         subband_energy_history[i][0] = subband_energy;
                         
-                        double c = 5;
+                        double c = 1.05;
                         
-                        if ((subband_energy > (c*average_subband_energy)) && foundinanothersubband == false) {
-                            int[] stelle = new int[1];
-                            stelle[0] = segmentposition*samplesStep - (samplesStep/2);
-                            beats = ArrayUtils.addAll(beats, stelle);
-                            foundinanothersubband = true;
+//                        System.out.println(subband_energy);
+//                        System.out.println(average_subband_energy);
+//                        System.out.println("");
+                        
+                        if (buffer_voll > 43) {
+
+                            // Beat wenn lokale Energie größer ist als c*Durchschnitt im Buffer:
+                            if ((subband_energy > (c*average_subband_energy))) {
+                                //System.out.println("BEAT!");
+                                beatcountn++;
+                                
+                            }
+
                         }
 
                     }
+                    
+                    if (buffer_voll > 43) {
+                        
+                        if (beatcountn > 3) {
+                            
+                            // True Beat found!
+                            beatinanysubband++;
 
+                            if (beatinanysubband == 5) {
+                                anzahl_gefundende_beats++;
+                            }
+                            
+                        } else {
+                            
+                            beatinanysubband = 0;
+                            
+                        }
+                        
+                        beatcountn = 0;
+                        
+                        if (segmentposition > (44100*5/samplesStep)) {
+
+                            int current_bpm = (int)((anzahl_gefundende_beats * 44100 * 60) / (segmentposition * samplesStep));
+                            alleBPMs.add(current_bpm);
+                            //System.out.println(current_bpm);
+                            segmentposition = 0;
+                            anzahl_gefundende_beats = 0;
+
+                        }
+                        
+                        
+                    }
                }
                
                
@@ -405,6 +391,14 @@ public class BPMLocalize {
 
             // WAV-Datei schließen.
             wavFile.close();
+            
+            int summe = 0;
+            for (int curBPM: alleBPMs) {
+                summe += curBPM;      
+            }
+            double averageBPM = (double) summe / alleBPMs.size();
+            
+            System.out.println("BPM ermittelt: "+averageBPM+" BPM");
 
             
         } catch (Exception e) {
