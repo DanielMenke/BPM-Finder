@@ -287,6 +287,9 @@ public class MediaControl extends BorderPane {
                 @Override
                 public void run() {
                     Duration currentTime = mediaView.getMediaPlayer().getCurrentTime();
+                    
+                    
+                    
                     playTime.setText(formatTime(currentTime, duration));
                     timeSlider.setDisable(duration.isUnknown());
                     //System.out.println("UpdateValues");
