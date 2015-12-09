@@ -36,6 +36,7 @@ import javafx.scene.media.AudioSpectrumListener;
 
 public class MediaControl extends BorderPane {
 
+    private ThresholdBPMFinder thresholdBPMFinderTest;
     private BPMLocalize bpmlocalizetest;
     private MediaPlayer mp;
     private MediaPlayer track;
@@ -55,11 +56,13 @@ public class MediaControl extends BorderPane {
     @FXML private Button playButton;
     @FXML private Button openFileButton = new Button("OpenFile");
     @FXML private Button runBPMLocalizeButton = new Button("BPM-Localize");
+    @FXML private Button runThresholdMethodButton = new Button("BPM-Threshold-Method");
     private static final int HOUR_IN_MINUTES = 60;
     private static final int MINUTE_IN_SECONDS = 60;
     private static final int HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS;
 
     public MediaControl(MediaPlayer mp) {
+        
         
         AreaChart<Number, Number> ac = audioAnalyzer.createChart();
         AudioSpectrumListener as = audioAnalyzer.audioSpectrumListener;
@@ -67,9 +70,8 @@ public class MediaControl extends BorderPane {
         setStyle("-fx-background-color: #22c7;");
         mediaView = new MediaView(mp);
         fileHandler = new FileHandler();
-        
         bpmlocalizetest = new BPMLocalize();
-        
+        thresholdBPMFinderTest = new ThresholdBPMFinder();
         Pane mvPane = new Pane() {
             
         };
@@ -81,6 +83,7 @@ public class MediaControl extends BorderPane {
         mediaBar = new HBox();
         mediaBar.setAlignment(Pos.CENTER);
         mediaBar.setPadding(new Insets(5, 10, 5, 10));
+        mediaBar.setMinHeight(100);
         BorderPane.setAlignment(mediaBar, Pos.CENTER);
         
         //Add Open File Button
@@ -88,6 +91,8 @@ public class MediaControl extends BorderPane {
         
         // Add BPM Localize Button (for testing)
         mediaBar.getChildren().add(runBPMLocalizeButton);
+        // Add ThresholdMethod Button
+        mediaBar.getChildren().add(runThresholdMethodButton);
         
         //Add play Button
         playButton = new Button(">");
@@ -170,6 +175,21 @@ public class MediaControl extends BorderPane {
             }
         });
         
+        // Threshold Method Button
+        
+        runThresholdMethodButton.setOnAction(new EventHandler<ActionEvent>() {
+            
+            @Override
+            public void handle(ActionEvent event) {
+                
+              Thread analyzingThread = new Thread (new Runnable(){
+                 public void run(){
+                    double bpm = thresholdBPMFinderTest.detectBPM();
+                 } 
+              });
+                analyzingThread.start();
+            }
+        });
         
         //Play button event
         playButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -178,6 +198,7 @@ public class MediaControl extends BorderPane {
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
                 mediaView.getMediaPlayer().setAudioSpectrumListener(as);
+                
                 switch (status) {
                     case UNKNOWN:
                         break;
@@ -196,6 +217,7 @@ public class MediaControl extends BorderPane {
                         mediaView.getMediaPlayer().pause();
 
                 }
+           
             }
         });
         //Open File Button Handling
@@ -215,7 +237,7 @@ public class MediaControl extends BorderPane {
                     System.out.println(track.getCurrentTime());
                     
                     bpmlocalizetest.setWAV(fileHandler.getFile());
-                    
+                    thresholdBPMFinderTest.setWAV(fileHandler.getFile());
                     updateValues();
                 }
             }
@@ -223,6 +245,8 @@ public class MediaControl extends BorderPane {
         applyListeners();
         
     }
+    
+
     protected void applyListeners(){
         
         mediaView.getMediaPlayer().currentTimeProperty().addListener(new InvalidationListener() {
