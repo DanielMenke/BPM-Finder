@@ -38,12 +38,13 @@ public class MediaControl extends BorderPane {
 
     private ThresholdBPMFinder thresholdBPMFinderTest;
     private BPMLocalize bpmlocalizetest;
+    private WavPlotter wavPlotter;
     private MediaPlayer mp;
     private MediaPlayer track;
     private FileHandler fileHandler;
     private FileChooser fc;
     private Media media;
-    private AudioAnalyzer audioAnalyzer = new AudioAnalyzer();
+
     @FXML private MediaView mediaView;
     private final boolean repeat = false;
     private boolean stopRequested = false;
@@ -53,6 +54,7 @@ public class MediaControl extends BorderPane {
     @FXML private Label playTime;
     @FXML private Slider volumeSlider;
     @FXML private HBox mediaBar;
+    @FXML private HBox wavBox;
     @FXML private Button playButton;
     @FXML private Button openFileButton = new Button("OpenFile");
     @FXML private Button runBPMLocalizeButton = new Button("BPM-Localize");
@@ -63,22 +65,14 @@ public class MediaControl extends BorderPane {
 
     public MediaControl(MediaPlayer mp) {
         
-        
-        AreaChart<Number, Number> ac = audioAnalyzer.createChart();
-        AudioSpectrumListener as = audioAnalyzer.audioSpectrumListener;
+
+
         this.mp = mp;
         setStyle("-fx-background-color: #22c7;");
         mediaView = new MediaView(mp);
         fileHandler = new FileHandler();
         bpmlocalizetest = new BPMLocalize();
         thresholdBPMFinderTest = new ThresholdBPMFinder();
-        Pane mvPane = new Pane() {
-            
-        };
-        mvPane.getChildren().add(ac);
-        mvPane.setStyle("-fx-background-color: black;");
-       
-        setCenter(mvPane);
         updateValues();
         mediaBar = new HBox();
         mediaBar.setAlignment(Pos.CENTER);
@@ -93,6 +87,15 @@ public class MediaControl extends BorderPane {
         mediaBar.getChildren().add(runBPMLocalizeButton);
         // Add ThresholdMethod Button
         mediaBar.getChildren().add(runThresholdMethodButton);
+        
+
+        wavBox = new HBox();
+        wavBox.setAlignment(Pos.CENTER);
+        wavBox.setMinHeight(250);
+        wavBox.setStyle("fx-background-color: #FFFFFF;");
+        BorderPane.setAlignment(wavBox, Pos.CENTER);
+        setTop(wavBox);
+        
         
         //Add play Button
         playButton = new Button(">");
@@ -197,7 +200,6 @@ public class MediaControl extends BorderPane {
             @Override
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
-                mediaView.getMediaPlayer().setAudioSpectrumListener(as);
                 
                 switch (status) {
                     case UNKNOWN:
@@ -226,7 +228,7 @@ public class MediaControl extends BorderPane {
 
             @Override
             public void handle(ActionEvent event) {
-               
+                
                 track = fileHandler.openFile();
               
                 if (track != null) {
@@ -235,7 +237,9 @@ public class MediaControl extends BorderPane {
                     mediaView.setMediaPlayer(track);
                     applyListeners();
                     System.out.println(track.getCurrentTime());
-                    
+                    wavPlotter = new WavPlotter(fileHandler.getFile(), 500, 500);
+                    wavPlotter.plot(3000, 1000);
+                    wavBox.getChildren().add(wavPlotter);
                     bpmlocalizetest.setWAV(fileHandler.getFile());
                     thresholdBPMFinderTest.setWAV(fileHandler.getFile());
                     updateValues();

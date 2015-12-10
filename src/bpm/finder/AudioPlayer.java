@@ -35,7 +35,7 @@ public class AudioPlayer extends Application {
         
         
         Group root = new Group();
-        Scene scene = new Scene(root, 540 , 500);
+        Scene scene = new Scene(root, 1024 , 500);
         MediaPlayer mediaPlayer = new MediaPlayer(media);
         MediaControl mediaControl = new MediaControl(mediaPlayer);
         scene.setRoot(mediaControl);
