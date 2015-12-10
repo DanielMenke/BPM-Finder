@@ -7,6 +7,7 @@ package bpm.finder;
 
 import java.io.File;
 import java.io.IOException;
+import static java.lang.Math.abs;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.scene.paint.Color;
@@ -93,7 +94,7 @@ public class WavPlotter extends Path{
     
     public Path plot(int precision, int width){
         setStroke(Color.BLACK);
-        setStrokeWidth(0.8);
+        setStrokeWidth(1.5);
         setStrokeType(StrokeType.OUTSIDE);
 
         setWav();
@@ -107,15 +108,8 @@ public class WavPlotter extends Path{
             lt.setX(plotWidth*((double)i/data.length));
             lt.setY(data[i]*150);
             getElements().add(lt);
-            if((data[i]>0 )&& (data[i+1]<0)
-                    ||(data[i]<0)&&(data[i+1]>0))
-            {
-                i+=1;
-            }
-            else
-            {
-                i+=data.length/precision;
-            }
+            
+            i+=data.length/precision;
 
         }
 
