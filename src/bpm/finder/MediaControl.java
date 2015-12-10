@@ -238,7 +238,7 @@ public class MediaControl extends BorderPane {
                     applyListeners();
                     System.out.println(track.getCurrentTime());
                     wavPlotter = new WavPlotter(fileHandler.getFile(), 500, 500);
-                    wavPlotter.plot(3000, 1000);
+                    wavPlotter.plot(3000, 500);
                     wavBox.getChildren().add(wavPlotter);
                     bpmlocalizetest.setWAV(fileHandler.getFile());
                     thresholdBPMFinderTest.setWAV(fileHandler.getFile());
