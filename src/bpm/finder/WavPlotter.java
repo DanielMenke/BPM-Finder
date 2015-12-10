@@ -94,8 +94,8 @@ public class WavPlotter extends Path{
     
     public Path plot(int precision, int width){
         setStroke(Color.BLACK);
-        setStrokeWidth(1.5);
-        setStrokeType(StrokeType.OUTSIDE);
+        setStrokeWidth(1.1);
+        setStrokeType(StrokeType.CENTERED);
 
         setWav();
         double [] data = getWavData();
@@ -106,7 +106,7 @@ public class WavPlotter extends Path{
         for (int i = 0; i<data.length;){
             LineTo lt = new LineTo();
             lt.setX(plotWidth*((double)i/data.length));
-            lt.setY(data[i]*150);
+            lt.setY(data[i]*125);
             getElements().add(lt);
             
             i+=data.length/precision;

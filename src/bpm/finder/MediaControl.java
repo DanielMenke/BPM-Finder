@@ -92,9 +92,11 @@ public class MediaControl extends BorderPane {
         wavBox = new HBox();
         wavBox.setAlignment(Pos.CENTER);
         wavBox.setMinHeight(250);
-        wavBox.setStyle("fx-background-color: #FFFFFF;");
+        wavBox.setPadding(new Insets(5, 10, 5, 10));
+        
         BorderPane.setAlignment(wavBox, Pos.CENTER);
         setTop(wavBox);
+        wavBox.setStyle("-fx-background-color: #FFFFFF;");
         
         
         //Add play Button
@@ -239,7 +241,7 @@ public class MediaControl extends BorderPane {
                     applyListeners();
                     System.out.println(track.getCurrentTime());
                     wavPlotter = new WavPlotter(fileHandler.getFile(), 500, 500);
-                    wavPlotter.plot(2500, 950);
+                    wavPlotter.plot(3000, 950);
                     wavBox.getChildren().add(wavPlotter);
                     bpmlocalizetest.setWAV(fileHandler.getFile());
                     thresholdBPMFinderTest.setWAV(fileHandler.getFile());
