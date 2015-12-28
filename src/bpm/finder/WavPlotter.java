@@ -7,12 +7,14 @@ package bpm.finder;
 
 import java.io.File;
 import java.io.IOException;
+import static java.lang.Math.abs;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.LineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.StrokeType;
 
 /**
  *
@@ -76,7 +78,6 @@ public class WavPlotter extends Path{
                 // WAV-Datei schließen.
                 wavFile.close();
                 double [] data = buffer[0];
-                System.out.println("DataSIze "+data.length);
                 return data;
 
             } catch (Exception e) {
@@ -92,23 +93,28 @@ public class WavPlotter extends Path{
     }
     
     public Path plot(int precision, int width){
-        
         setStroke(Color.BLACK);
-        System.out.println("A");
+        setStrokeWidth(1.1);
+        setStrokeType(StrokeType.CENTERED);
+
         setWav();
         double [] data = getWavData();
         double plotWidth = width;
         while(!(data.length%precision == 0)){
             precision--;
-            System.out.println("B");
         }
-        for (double i = 0; i<data.length; i += (data.length/precision)){
+        for (int i = 0; i<data.length;){
             LineTo lt = new LineTo();
-            lt.setX(plotWidth*(i/data.length));
-            lt.setY(data[(int)i]*100);
+            lt.setX(plotWidth*((double)i/data.length));
+            lt.setY(data[i]*125);
             getElements().add(lt);
-            System.out.println("x: "+lt.getX()+(" y: "+lt.getY()));
+            
+            i+=data.length/precision;
+
         }
+
+
+        
         return this;
 
 //            LineTo lt = new LineTo();
