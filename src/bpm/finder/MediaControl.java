@@ -38,6 +38,7 @@ public class MediaControl extends BorderPane {
 
     private ThresholdBPMFinder thresholdBPMFinderTest;
     private BPMLocalize bpmlocalizetest;
+    private WaveletBPM waveletbpm;
     private WavPlotter wavPlotter;
     private MediaPlayer mp;
     private MediaPlayer track;
@@ -72,6 +73,7 @@ public class MediaControl extends BorderPane {
         mediaView = new MediaView(mp);
         fileHandler = new FileHandler();
         bpmlocalizetest = new BPMLocalize();
+        waveletbpm = new WaveletBPM();
         thresholdBPMFinderTest = new ThresholdBPMFinder();
         updateValues();
         mediaBar = new HBox();
@@ -166,8 +168,7 @@ public class MediaControl extends BorderPane {
 
                     //bpmlocalizetest.bpm_detect(9700000);
                     bpmlocalizetest.beat_detect();
-                    
-                    
+                    waveletbpm.getbpm();
                     
                 } else {
                     
@@ -241,6 +242,7 @@ public class MediaControl extends BorderPane {
                     wavPlotter.plot(3000, 1000);
                     wavBox.getChildren().add(wavPlotter);
                     bpmlocalizetest.setWAV(fileHandler.getFile());
+                    waveletbpm.setWAV(fileHandler.getFile());
                     thresholdBPMFinderTest.setWAV(fileHandler.getFile());
                     updateValues();
                 }
