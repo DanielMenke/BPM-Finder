@@ -47,7 +47,7 @@ public class WaveletBPM {
             
             if (i%interval == 0) {
                 
-                decomposition[i] = (1-0.8)*decomposition[i] - 0.8*lasty;
+                decomposition[i] = (1-0.95)*decomposition[i] - 0.95*lasty;
                 lasty = decomposition[i];
                 
                 undersamplearray[pointer] = decomposition[i];
@@ -142,6 +142,22 @@ public class WaveletBPM {
                     }
                 }
             }
+            
+                 try {
+                FileWriter fw1 = new FileWriter("autocor.txt");
+                BufferedWriter bw1 = new BufferedWriter(fw1);
+
+                for (int i = 0; i < autocor.length; i++) {
+                    bw1.write(Double.toString(autocor[i])+"\n");
+                }
+                
+                
+                 bw1.close();
+                } catch (Exception e) {
+
+                    System.out.println(e);
+
+                } 
                                 
             
             // Find Peak
@@ -162,12 +178,12 @@ public class WaveletBPM {
             }
 
 
-            //System.out.println("max @ "+peak_index);
+            System.out.println("max @ "+peak_index);
 
 
             double windowBPM = 60./peak_index * (44100./Math.pow(2,depth-1));
 
-            //System.out.println("BPM?: "+windowBPM);
+            System.out.println("BPM?: "+windowBPM);
             BPMs.add(windowBPM);
 
         }

@@ -28,7 +28,7 @@ public class BPMLocalize {
       
     }
     
-    public double[][] getwavdata() {
+    public double[][] getWavData() {
         
         try {
             
@@ -39,29 +39,20 @@ public class BPMLocalize {
             long totalFrames = wavFile.getNumFrames();
             int totWAVsamples = (int) totalFrames;
             
+            // Anzahl der Kanäle (1=Mono, 2=Stereo)
             int numChannels = wavFile.getNumChannels();
-
+            
+            // Buffer der entsprechenden Größe anlegen:
+            // -> erste Dimension der Array: Kanalauswahl
+            // -> zeite Dimension der Array: einzelne Sample-Werte
             double[][] buffer = new double[numChannels][totWAVsamples];
             
-            // ev. Offset-Fix
-            //wavFile.readFrames(new double[numChannels][startSample], startSample);      
-
             // Segment in den Buffer laden.
             int samplesRead = wavFile.readFrames(buffer, totWAVsamples);
 
             // WAV-Datei schließen.
             wavFile.close();
-            
-            //WavFilter lowpassFilter = new WavFilter(
-            //        currentFile.getPath(), 
-            //        FilterPassType.lowpass, 
-            //        FilterCharacteristicsType.bessel,
-            //        6, -1,100, 0
-            //); 
-            
-            //double [] [] wavData = lowpassFilter.getWavData();
-            
-            //return wavData;
+
             return buffer;
 
         } catch (Exception e) {
@@ -90,29 +81,28 @@ public class BPMLocalize {
                 energy += audioProcessData[i]*audioProcessData[i];
             }
         }
-        energy = energy/length;
-        
+
         return energy;
         
     }
     
     public void beat_detect() {
         
-        double const_c = 1.2;
-        int minimum_distance = 5;
-        int segmentSize = 1024;
-        int segments_one_second = 40;
+        int segmentSize = 441;
+        int average_energy_level_segments = 50; // 50 Segmente werden zusammengefasst
+                                                // zur Berechnung eines durchschnittlichen
+                                                // Energieniveaus
         
         // Audiodaten laden
-        double[][] WavData = getwavdata();
+        double[][] WavData = getWavData();
         
         // Audiodaten "Länge", d.h. Anzahl der Samples
         // WavData[0=links / 1=rechts][sample]
-        // Es wird nur der erste Kanal bei der Berechnung der BPM verwendet.
+        // Es wird nur der erste Kanal BPM verwendet.
         double[] audioProcessData = WavData[0];
         int length = audioProcessData.length;
         
-        //Die Audiodaten werden in bspw. 1024-Sample (siehe oben) lange Segmente zerteilt.
+        // Die Audiodaten werden in 441-Sample (siehe oben) lange Segmente zerteilt.
         int amountSegments = length/segmentSize;
         
         // Energie in den einzelnen Segmenten
@@ -141,26 +131,20 @@ public class BPMLocalize {
 
                 } 
                 
-        // Energie über 1 Sekunde-Blöcken:
         
-        // 1 Sekunde entspricht (bei 1024-Samples-Segmenten) etwa 43 Segmenten
-        //int segments_one_second = 43;
-        //int segments_one_second = (44100/segmentSize);
-                 
-        
-        double[] energy_onesecondsegments = new double[amountSegments];
+        double[] energy_averageniveau_segments = new double[amountSegments];
 
         double summe = 0.;
-        for (int current_segment = 0; current_segment < segments_one_second; current_segment++) {
+        for (int current_segment = 0; current_segment < average_energy_level_segments; current_segment++) {
             summe += energy_segments[current_segment];
         }
-        energy_onesecondsegments[0] = summe/segments_one_second;
+        energy_averageniveau_segments[0] = summe/average_energy_level_segments;
         
         for (int current_segment = 1; current_segment < amountSegments; current_segment++) {
-            if ((current_segment+segments_one_second-1) < amountSegments) {
-                summe = summe - energy_segments[current_segment-1] + energy_segments[current_segment+(segments_one_second-1)];
+            if ((current_segment+average_energy_level_segments-1) < amountSegments) {
+                summe = summe - energy_segments[current_segment-1] + energy_segments[current_segment+(average_energy_level_segments-1)];
             }
-            energy_onesecondsegments[current_segment] = summe/segments_one_second;
+            energy_averageniveau_segments[current_segment] = summe/average_energy_level_segments;
         }
         
         
@@ -172,8 +156,8 @@ public class BPMLocalize {
                 //    bw1.write(Integer.toString(i)+"\n");
                 //}
                 
-                for (int i = 0; i < energy_onesecondsegments.length; i++) {
-                    bw1.write(Double.toString(energy_onesecondsegments[i])+"\n");
+                for (int i = 0; i < energy_averageniveau_segments.length; i++) {
+                    bw1.write(Double.toString(energy_averageniveau_segments[i])+"\n");
                 }
                 
                 
@@ -200,11 +184,11 @@ public class BPMLocalize {
                                                             ...
         
         */
-        int[] energy_beats = new int[amountSegments+(segments_one_second/2)];
+        int[] energy_beats = new int[amountSegments+(average_energy_level_segments/2)];
         
-        for (int current_segment = (segments_one_second/2); current_segment < amountSegments; current_segment++) {
+        for (int current_segment = (average_energy_level_segments/2); current_segment < amountSegments; current_segment++) {
             
-            if (energy_segments[current_segment] > const_c*energy_onesecondsegments[current_segment-(segments_one_second/2)]) {
+            if (energy_segments[current_segment] > energy_averageniveau_segments[current_segment-(average_energy_level_segments/2)]) {
                 energy_beats[current_segment] = 1;
             }
             
@@ -232,7 +216,9 @@ public class BPMLocalize {
         
         // Die Anzahl der Segmente zwischen zwei gefundenen Beats sollen nun gezählt werden:
         List<Integer> deltaSegments = new ArrayList<Integer>();
-        
+        int minimum_distance = 5; // Mindesabstand der Beats,
+                                  // um kleine Störungen zu filtern...
+                
         int last_segment_index = 0;
         for (int current_segment = 0; current_segment < amountSegments; current_segment++) {
             if (energy_beats[current_segment] == 1 && energy_beats[current_segment-1] == 0) {
@@ -270,7 +256,7 @@ public class BPMLocalize {
         
         // Wie oft treten die deltaSegments jeweils auf?
         // Definiert wird: Delta's > 2 Sekunden werden ignoriert. (also BPM<30 gibt's nicht)
-        int segments_two_second = segments_one_second*2;
+        int segments_two_second = average_energy_level_segments*4;
         
         int[] amount_of_deltaSegment = new int[segments_two_second];
         
@@ -311,14 +297,6 @@ public class BPMLocalize {
 
         
         System.out.println("Max:: "+deltaSegment_max);
-        
-        //int neighbor = deltaSegment_max+1;
-        //if (amount_of_deltaSegment[deltaSegment_max+1] < amount_of_deltaSegment[deltaSegment_max-1]) {
-        //    neighbor = deltaSegment_max-1;
-        //}
-
-        //double gewichtetesMittel = (deltaSegment_max*amount_of_deltaSegment[deltaSegment_max]+neighbor*amount_of_deltaSegment[neighbor]) / (double) (amount_of_deltaSegment[neighbor]+amount_of_deltaSegment[deltaSegment_max]);
-        //System.out.println("gewichtetesMittel:: "+gewichtetesMittel);
         
         // Umrechnung Anzahl d. delta-Segmente in delta-Samples:
         double deltaSamples_max = deltaSegment_max*segmentSize;

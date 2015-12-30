@@ -125,8 +125,8 @@ public class ThresholdBPMFinder{
             if (interval != 0){
                 double theoreticalTempo = 60 / (interval/(double)sampleRate);
                 
-                while(theoreticalTempo <90) theoreticalTempo *=2;
-                while(theoreticalTempo >180) theoreticalTempo /=2;
+                while(theoreticalTempo <60) theoreticalTempo *=2;
+                while(theoreticalTempo >200) theoreticalTempo /=2;
                 
                 theoreticalTempo = Math.round(theoreticalTempo);
                 
