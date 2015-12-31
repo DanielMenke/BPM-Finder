@@ -44,18 +44,26 @@ public class ThresholdBPMFinder{
         this.filterCharacteristics = FilterCharacteristicsType.bessel; 
     }
     
-    public boolean setWAV(File file){
+    public boolean setWAV(File file) {
+    
+        // Mit dieser Funktion wird der Klasse mitgeteilt,
+        // welche WAV-Datei geladen wurde.
         this.currentFile = file;
+        
         try {
+            // Versuche, die Wav-Datei zu öffnen.
             this.wavFile = WavFile.openWavFile(currentFile);
             wavFile.close();
-           
         } catch (IOException | WavFileException ex) {
+            // Exception: WAV-Datei konnte nicht geöffnet werden.
+            // return false!
             Logger.getLogger(ThresholdBPMFinder.class.getName()).log(Level.SEVERE, null, ex);
             this.currentFile = null;
             return false;
         }
-         return true;
+        
+        return true;
+
     }
     
     public double magnitudeToDecibel(double magnitude){

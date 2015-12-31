@@ -76,37 +76,37 @@ protected File filterWavFile ()
             File currentFile = filterWavFile();
             
             // WAV-Datei öffnen.
-             wavFile = WavFile.openWavFile(currentFile);
+            wavFile = WavFile.openWavFile(currentFile);
             
             // Die Gesamtanzahl der Samples in der zu untersuchenden WAV-Datei
             long totalFrames = wavFile.getNumFrames();
             int totWAVsamples = (int) totalFrames;
             
+            // Anzahl der Kanäle (1=Mono, 2=Stereo)
             int numChannels = wavFile.getNumChannels();
-
+            
+            // Buffer der entsprechenden Größe anlegen:
+            // -> erste Dimension der Array: Kanalauswahl
+            // -> zeite Dimension der Array: einzelne Sample-Werte
             double[][] buffer = new double[numChannels][totWAVsamples];
             
-            // ev. Offset-Fix
-            //wavFile.readFrames(new double[numChannels][startSample], startSample);      
-
             // Segment in den Buffer laden.
             int samplesRead = wavFile.readFrames(buffer, totWAVsamples);
 
             // WAV-Datei schließen.
             wavFile.close();
-            
+
             return buffer;
 
         } catch (Exception e) {
             
             System.out.println(e);
-            return null;
         }
         
-       
-            
-    }
+        return new double[0][0];
         
+    }
+       
     
     public long getSampleRate(){
        
