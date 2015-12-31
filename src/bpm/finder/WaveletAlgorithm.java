@@ -12,24 +12,17 @@ import java.util.ArrayList;
 import java.util.List;
 import jwave.Transform;
 import jwave.transforms.FastWaveletTransform;
-import jwave.transforms.wavelets.daubechies.Daubechies2;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
 
 /**
  *
  * @author Stefan
  */
-public class WaveletBPM {
+public class WaveletAlgorithm {
     
     private File currentFile;
     private WavFile wavFile;
-    
-    public WaveletBPM() {
-        
-
-    }
-
-    
+       
     private double[] envelope(double[] resampleAndAdd, double[] decomposition, int start, int end) {
 
         // Downsampling
@@ -79,10 +72,10 @@ public class WaveletBPM {
         
     }
     
-    public void getbpm() {
+    public int get_bpm() {
         
         // Audiodaten laden
-        double[][] WavData = getwavdata();
+        double[][] WavData = getWavData();
         
         double[] audioProcessData = WavData[0];
         
@@ -134,21 +127,41 @@ public class WaveletBPM {
 
             // Autokorrelation
             int n = resampleAndAdd.length;
-            double[] autocor = new double[n];
-            for (int k = 0; k < n; k++) {
-                for (int i = 0; i < n; i++) {
-                    if (k+i < n) {
-                        autocor[k] += resampleAndAdd[i] * resampleAndAdd[k+i];
-                    }
-                }
+
+            // Array für die Autokorrelation vorbereiten
+            // (!) Zero-Padding: 
+            // Sind n die Anzahl der Elemente der Eingangsfolge, so hat das 
+            // Ergebnis der linearen Autokorrelation die Länge 2*n-1
+            double[] AKF_real = new double[n*2-1];
+            double[] AKF_imag = new double[n*2-1];
+            
+            // Array auffüllen, in die
+            // alle Elemente i>n bleiben 0 (zero-padding)
+            for (int i = 0; i < n; i++) {
+                AKF_real[i] = resampleAndAdd[i];
             }
+            
+            // FFT
+            fft.transform(AKF_real, AKF_imag);
+            
+            // Autokorrelation (Multiplikation im Frequenzbereich:
+            // (!) aber mit konjugiert komplexem Paar
+            for (int i = 0; i < AKF_real.length; i++) {
+                AKF_real[i] = AKF_real[i]*AKF_real[i] + AKF_imag[i]*AKF_imag[i];
+                AKF_imag[i] = 0;
+            }
+            
+            // IFFT
+            fft.inverseTransform(AKF_real, AKF_imag);
+            
+            
             
                  try {
                 FileWriter fw1 = new FileWriter("autocor.txt");
                 BufferedWriter bw1 = new BufferedWriter(fw1);
 
-                for (int i = 0; i < autocor.length; i++) {
-                    bw1.write(Double.toString(autocor[i])+"\n");
+                for (int i = 0; i < AKF_real.length; i++) {
+                    bw1.write(Double.toString(AKF_real[i])+"\n");
                 }
                 
                 
@@ -171,19 +184,19 @@ public class WaveletBPM {
             int peak_index = 0;
             for (int i = min_c; i < max_c; i++) {
                 //autocor[i] = Math.abs(autocor[i]);
-                if (autocor[i] > peak) {
-                    peak = autocor[i];
+                if (AKF_real[i] > peak) {
+                    peak = AKF_real[i];
                     peak_index = i;
                 }
             }
 
 
-            System.out.println("max @ "+peak_index);
+            //System.out.println("max @ "+peak_index);
 
 
             double windowBPM = 60./peak_index * (44100./Math.pow(2,depth-1));
 
-            System.out.println("BPM?: "+windowBPM);
+            //System.out.println("BPM?: "+windowBPM);
             BPMs.add(windowBPM);
 
         }
@@ -209,17 +222,15 @@ public class WaveletBPM {
             }
         }
         
-        
-        
-        System.out.println("final BPM:: "+maximumBPM);
+        // BPM als Ergebnis zurückgeben
+        return maximumBPM;
         
                  
     }    
     
-    public double[][] getwavdata() {
+    private double[][] getWavData() {
         
         try {
-            
             // WAV-Datei öffnen.
             wavFile = WavFile.openWavFile(currentFile);
             
@@ -227,13 +238,14 @@ public class WaveletBPM {
             long totalFrames = wavFile.getNumFrames();
             int totWAVsamples = (int) totalFrames;
             
+            // Anzahl der Kanäle (1=Mono, 2=Stereo)
             int numChannels = wavFile.getNumChannels();
-
+            
+            // Buffer der entsprechenden Größe anlegen:
+            // -> erste Dimension der Array: Kanalauswahl
+            // -> zeite Dimension der Array: einzelne Sample-Werte
             double[][] buffer = new double[numChannels][totWAVsamples];
             
-            // ev. Offset-Fix
-            //wavFile.readFrames(new double[numChannels][startSample], startSample);      
-
             // Segment in den Buffer laden.
             int samplesRead = wavFile.readFrames(buffer, totWAVsamples);
 
@@ -253,27 +265,39 @@ public class WaveletBPM {
     
     public boolean setWAV(File file) {
     
-        //System.out.println(file.toURI().toASCIIString());
+        // Mit dieser Funktion wird der Klasse mitgeteilt,
+        // welche WAV-Datei geladen wurde.
         this.currentFile = file;
         
         try {
-            
             // Versuche, die Wav-Datei zu öffnen.
             this.wavFile = WavFile.openWavFile(currentFile);
             wavFile.close();
-            //this.wavFile.display();
-
         } catch (Exception e) {
-            
+            // Exception: WAV-Datei konnte nicht geöffnet werden.
+            // return false!
             System.out.println(e);
             this.currentFile = null;
             return false;
-            
         }
         
         return true;
 
     }
     
+    public boolean isReady() {
+        
+        // Ist der Algorithmus bereit, d.h. hat er alle nötigen Werte
+        // mitgeteilt bekommen, um starten zu können?
+        
+        // Wenn keine Datei gesetzt wurde, dann ist er nicht bereit,
+        // -> return false;
+        if (this.currentFile != null) {
+            return true;
+        } else {
+            return false;            
+        }
+        
+    }
     
 }

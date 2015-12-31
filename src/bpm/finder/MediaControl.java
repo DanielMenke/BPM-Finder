@@ -36,10 +36,9 @@ import javafx.scene.media.AudioSpectrumListener;
 
 public class MediaControl extends BorderPane {
 
-    private ThresholdBPMFinder thresholdBPMFinderTest;
-    private BPMLocalize bpmlocalizetest;
-    private WaveletBPM waveletbpm;
-    private WavPlotter wavPlotter;
+    private ThresholdBPMFinder BPM_TRESHOLD_ALGORITHM;
+    private SoundEnergyAlgorithm BPM_SOUNDENERGY_ALGORITHM;
+    private WaveletAlgorithm BPM_WAVELET_ALGORITHM;
     private MediaPlayer mp;
     private MediaPlayer track;
     private FileHandler fileHandler;
@@ -58,23 +57,26 @@ public class MediaControl extends BorderPane {
     @FXML private HBox wavBox;
     @FXML private Button playButton;
     @FXML private Button openFileButton = new Button("OpenFile");
-    @FXML private Button runBPMLocalizeButton = new Button("BPM-Localize");
-    @FXML private Button runThresholdMethodButton = new Button("BPM-Threshold-Method");
+    @FXML private Button runSoundEnergyButton = new Button("Soundenergie Algorithmus");
+    @FXML private Button runThresholdMethodButton = new Button("Tiefpass&Peaks Algorithmus");
+    @FXML private Button runWaveletButton = new Button("Wavelet Algorithmus");
+    
     private static final int HOUR_IN_MINUTES = 60;
     private static final int MINUTE_IN_SECONDS = 60;
     private static final int HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS;
 
     public MediaControl(MediaPlayer mp) {
-        
-
-
+       
         this.mp = mp;
         setStyle("-fx-background-color: #22c7;");
         mediaView = new MediaView(mp);
         fileHandler = new FileHandler();
-        bpmlocalizetest = new BPMLocalize();
-        waveletbpm = new WaveletBPM();
-        thresholdBPMFinderTest = new ThresholdBPMFinder();
+        
+        // 3 Algorithmen
+        BPM_SOUNDENERGY_ALGORITHM = new SoundEnergyAlgorithm();
+        BPM_WAVELET_ALGORITHM = new WaveletAlgorithm();
+        BPM_TRESHOLD_ALGORITHM = new ThresholdBPMFinder();
+        
         updateValues();
         mediaBar = new HBox();
         mediaBar.setAlignment(Pos.CENTER);
@@ -85,11 +87,12 @@ public class MediaControl extends BorderPane {
         //Add Open File Button
         mediaBar.getChildren().add(openFileButton);
         
-        // Add BPM Localize Button (for testing)
-        mediaBar.getChildren().add(runBPMLocalizeButton);
+        // Add Start SoundEnergyAlgorithm Button
+        mediaBar.getChildren().add(runSoundEnergyButton);
         // Add ThresholdMethod Button
         mediaBar.getChildren().add(runThresholdMethodButton);
-        
+        // Add Wavelet-Algorithmus Button
+        mediaBar.getChildren().add(runWaveletButton);
 
         wavBox = new HBox();
         wavBox.setAlignment(Pos.CENTER);
@@ -159,30 +162,30 @@ public class MediaControl extends BorderPane {
 
         //EventHandling
         
-        //Run BPM Localize Button
-        runBPMLocalizeButton.setOnAction(new EventHandler<ActionEvent>() {
+        //runSoundEnergyButton Button Click
+        runSoundEnergyButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
                
-                if (bpmlocalizetest.isReady()) {
+                if (BPM_SOUNDENERGY_ALGORITHM.isReady()) {
                     
+                    Thread analyzingThread = new Thread (new Runnable(){
+                       public void run(){
+                          int BPM = BPM_SOUNDENERGY_ALGORITHM.get_bpm();
+                          System.out.println(BPM);
+                       } 
+                    });
+                    analyzingThread.start();
 
-                    //bpmlocalizetest.bpm_detect(9700000);
-                    bpmlocalizetest.beat_detect();
-                    waveletbpm.getbpm();
-                    
                 } else {
-                    
-                    System.out.println("BPM Localize not ready. (Missing WAV or BPM Data?)");
-                    
+                    System.out.println("not ready. (Missing WAV?)");
                 }
 
             }
         });
         
-        // Threshold Method Button
-        
+        // Threshold Method Button Click
         runThresholdMethodButton.setOnAction(new EventHandler<ActionEvent>() {
             
             @Override
@@ -190,10 +193,33 @@ public class MediaControl extends BorderPane {
                 
               Thread analyzingThread = new Thread (new Runnable(){
                  public void run(){
-                    double bpm = thresholdBPMFinderTest.detectBPM();
+                    double bpm = BPM_TRESHOLD_ALGORITHM.detectBPM();
                  } 
               });
                 analyzingThread.start();
+            }
+        });
+        
+        //runWaveletButton Button Click
+        runWaveletButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+               
+                if (BPM_WAVELET_ALGORITHM.isReady()) {
+                    
+                    Thread analyzingThread = new Thread (new Runnable(){
+                       public void run(){
+                          int BPM = BPM_WAVELET_ALGORITHM.get_bpm();
+                          System.out.println(BPM);
+                       } 
+                    });
+                    analyzingThread.start();
+
+                } else {
+                    System.out.println("not ready. (Missing WAV?)");
+                }
+
             }
         });
         
@@ -241,12 +267,11 @@ public class MediaControl extends BorderPane {
                     mediaView.setMediaPlayer(track);
                     applyListeners();
                     System.out.println(track.getCurrentTime());
-                    wavPlotter = new WavPlotter(fileHandler.getFile(), 500, 500);
-                    wavPlotter.plot(3000, 950);
-                    wavBox.getChildren().add(wavPlotter);
-                    bpmlocalizetest.setWAV(fileHandler.getFile());
-                    waveletbpm.setWAV(fileHandler.getFile());
-                    thresholdBPMFinderTest.setWAV(fileHandler.getFile());
+                    
+                    BPM_SOUNDENERGY_ALGORITHM.setWAV(fileHandler.getFile());
+                    BPM_TRESHOLD_ALGORITHM.setWAV(fileHandler.getFile());
+                    BPM_WAVELET_ALGORITHM.setWAV(fileHandler.getFile());
+                    
                     updateValues();
                 }
             }
