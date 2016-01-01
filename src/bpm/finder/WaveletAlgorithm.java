@@ -142,7 +142,7 @@ public class WaveletAlgorithm {
             // DWT vorbereiten.
             Transform transform = new Transform(new FastWaveletTransform(wavelet));
 
-            // Dekomposition des aktuellen Fensters
+            // 1) Dekomposition des aktuellen Fensters
             double[][] decomposeAll = transform.decompose(Windows[cur_window]);
             
             // Es wird das level 5 der Dekomposition untersucht.
@@ -185,7 +185,7 @@ public class WaveletAlgorithm {
                 // Von start bis end können nun aus der Dekompositionsarray decomposition
                 // die jeweilige aktuelle Koeffizientenfolge gelesen werden.
 
-                // Die "Detection function" ergibt sich aus der Zusammensetzung (Summe)
+                // 2) Die "Detection function" ergibt sich aus der Zusammensetzung (Summe)
                 // der einzeln verarbeiteten Koeffizientenfolgen:
                 detection_function = process_coefficients(detection_function, decomposition, start, end);
 
