@@ -5,6 +5,10 @@
  */
 package bpm.finder;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+
 import static javafx.application.ConditionalFeature.FXML;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -61,6 +65,8 @@ public class MediaControl extends BorderPane {
     @FXML private Button runThresholdMethodButton = new Button("Tiefpass&Peaks Algorithmus");
     @FXML private Button runWaveletButton = new Button("Wavelet Algorithmus");
     
+    @FXML private Button runBenchmarkButton = new Button("Benchmark");
+    
     private static final int HOUR_IN_MINUTES = 60;
     private static final int MINUTE_IN_SECONDS = 60;
     private static final int HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS;
@@ -93,11 +99,14 @@ public class MediaControl extends BorderPane {
         mediaBar.getChildren().add(runThresholdMethodButton);
         // Add Wavelet-Algorithmus Button
         mediaBar.getChildren().add(runWaveletButton);
-
+        
         wavBox = new HBox();
         wavBox.setAlignment(Pos.CENTER);
         wavBox.setMinHeight(250);
         wavBox.setPadding(new Insets(5, 10, 5, 10));
+        
+        // Add runBenchmarkButton Button
+        wavBox.getChildren().add(runBenchmarkButton);
         
         BorderPane.setAlignment(wavBox, Pos.CENTER);
         setTop(wavBox);
@@ -220,6 +229,54 @@ public class MediaControl extends BorderPane {
                     System.out.println("not ready. (Missing WAV?)");
                 }
 
+            }
+        });
+        
+        //Benchmark Button Click
+        runBenchmarkButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                
+                try {
+                    
+                    
+                    FileWriter fw1 = new FileWriter("Loop 1 - Algorithmen Vergleich.txt");
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+
+
+                    
+                    File[] files = new File("D:\\pyth\\test").listFiles();
+                    for (File file : files) {
+
+                       System.out.println("Now coming: " + file.getName());
+
+                        BPM_SOUNDENERGY_ALGORITHM.setWAV(file);
+                        int BPM = BPM_WAVELET_ALGORITHM.get_bpm();
+                        System.out.println(BPM);
+
+                        BPM_TRESHOLD_ALGORITHM.setWAV(file);
+                        BPM_WAVELET_ALGORITHM.setWAV(file);
+
+                        break;
+                        
+                        
+                    }
+
+                    
+                        bw1.write(Integer.toString(amount_of_deltaSegment[i])+"\n");
+
+
+
+                    bw1.close();
+                } catch (Exception e) {
+
+                    System.out.println(e);
+
+                } 
+
+                
+                
             }
         });
         
