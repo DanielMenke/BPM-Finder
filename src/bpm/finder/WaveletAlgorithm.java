@@ -312,10 +312,9 @@ public class WaveletAlgorithm {
                 maximum2BPM_count = countBPMs[BPM];
             }
         }
-
         
         // Wenn die zwei gefundenen BPM-Werte keine Vielfachen voneinander
-        // sind, dann nehme den größeren von beiden. (er ist genauer)
+        // sind, dann nehme den größeren von beiden. (dieser ist im Zweifel genauer)
         int BPM_result = 0;
         if (maximumBPM*2 != maximum2BPM && maximum2BPM*2 != maximumBPM) {
             if (maximumBPM > maximum2BPM) {
