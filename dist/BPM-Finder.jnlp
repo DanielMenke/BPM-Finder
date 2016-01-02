@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="BPM-Finder.jar" size="63797" download="eager" />
+    <jar href="BPM-Finder.jar" size="63816" download="eager" />
     <jar href="lib\JLargeArrays-1.2.jar" size="76482" download="eager" />
     <jar href="lib\JLargeArrays-1.4.jar" size="121537" download="eager" />
     <jar href="lib\JTransforms-2.4(1).jar" size="800539" download="eager" />

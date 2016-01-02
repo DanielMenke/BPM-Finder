@@ -106,7 +106,7 @@ public class MediaControl extends BorderPane {
         wavBox.setPadding(new Insets(5, 10, 5, 10));
         
         // Add runBenchmarkButton Button
-        wavBox.getChildren().add(runBenchmarkButton);
+        //wavBox.getChildren().add(runBenchmarkButton);
         
         BorderPane.setAlignment(wavBox, Pos.CENTER);
         setTop(wavBox);
