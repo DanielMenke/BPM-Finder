@@ -202,7 +202,8 @@ public class MediaControl extends BorderPane {
                 
               Thread analyzingThread = new Thread (new Runnable(){
                  public void run(){
-                    double bpm = BPM_TRESHOLD_ALGORITHM.detectBPM();
+                    int BPM = BPM_TRESHOLD_ALGORITHM.get_bpm();
+                    System.out.println(BPM);
                  } 
               });
                 analyzingThread.start();
@@ -241,34 +242,55 @@ public class MediaControl extends BorderPane {
                 try {
                     
                     
-                    FileWriter fw1 = new FileWriter("Loop 1 - Algorithmen Vergleich.txt");
-                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    FileWriter fw = new FileWriter("Loop 1 - Algorithmen Vergleich.txt");
+                    BufferedWriter bw = new BufferedWriter(fw);
 
 
-                    
-                    File[] files = new File("D:\\pyth\\test").listFiles();
+                    File[] files = new File("D:\\pyth\\Loop 1").listFiles();
+                    long start;
+                    long time_needed;
                     for (File file : files) {
 
                        System.out.println("Now coming: " + file.getName());
 
+                       
+                        // ALGORITHMUS A1
                         BPM_SOUNDENERGY_ALGORITHM.setWAV(file);
-                        int BPM = BPM_WAVELET_ALGORITHM.get_bpm();
-                        System.out.println(BPM);
-
+                        
+                        start = System.currentTimeMillis();
+                        int BPM_A1 = BPM_SOUNDENERGY_ALGORITHM.get_bpm();
+                        time_needed = System.currentTimeMillis() - start;
+                        System.out.println("Soundenergy-Algorithm: "+BPM_A1+" BPM in "+time_needed+" ms");
+                        bw.write("A1: "+file.getName()+": "+BPM_A1+" in "+Long.toString(time_needed)+" ms \n");
+                        
+                        
+                        // ALGORITHMUS A2
                         BPM_TRESHOLD_ALGORITHM.setWAV(file);
+                        
+                        start = System.currentTimeMillis();
+                        int BPM_A2 = BPM_TRESHOLD_ALGORITHM.get_bpm();
+                        time_needed = System.currentTimeMillis() - start;
+                        System.out.println("Threshold-Algorithm: "+BPM_A2+" BPM in "+time_needed+" ms");
+                        bw.write("A2: "+file.getName()+": "+BPM_A2+" in "+Long.toString(time_needed)+" ms \n");
+                        
+                        
+                        // ALGORITHMUS A3
                         BPM_WAVELET_ALGORITHM.setWAV(file);
+                        
+                        start = System.currentTimeMillis();
+                        int BPM_A3 = BPM_WAVELET_ALGORITHM.get_bpm();
+                        time_needed = System.currentTimeMillis() - start;
+                        System.out.println("Wavelet-Algorithm: "+BPM_A3+" BPM in "+time_needed+" ms");
+                        bw.write("A3: "+file.getName()+": "+BPM_A3+" in "+Long.toString(time_needed)+" ms \n");
+
 
                         break;
                         
                         
                     }
 
+                    bw.close();
                     
-                        bw1.write(Integer.toString(amount_of_deltaSegment[i])+"\n");
-
-
-
-                    bw1.close();
                 } catch (Exception e) {
 
                     System.out.println(e);

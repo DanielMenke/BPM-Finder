@@ -54,7 +54,7 @@ protected File filterWavFile ()
             File lowpassFilteredWav = new File("output.wav");
             
             AudioSystem.write(filterStream, AudioFileFormat.Type.WAVE, new File("output.wav"));
-            System.out.println("Length of WAV: "+lowpassFilteredWav.length());
+            //System.out.println("Length of WAV: "+lowpassFilteredWav.length());
             return lowpassFilteredWav;
             
                     

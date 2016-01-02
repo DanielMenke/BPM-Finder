@@ -155,7 +155,7 @@ public class ThresholdBPMFinder{
         
     }
 
-    public int detectBPM(){
+    public int get_bpm() {
         lowpassFilter = new WavFilter(
                 currentFile.getPath(), 
                 filterPassType, 
@@ -185,7 +185,7 @@ public class ThresholdBPMFinder{
         double [] buffer = new double [sampleWindow];
      
 
-        System.out.println("---------------------------------------");
+        //System.out.println("---------------------------------------");
  
         
         while (peakPositions.size() < minPeaks && threshold >= minThreshold){
@@ -202,12 +202,13 @@ public class ThresholdBPMFinder{
         bpm = Collections.max(tempoCounts.entrySet(), (entry1, entry2) 
                 -> entry1.getValue() > entry2.getValue() ? 1 : -1).getKey();
         
-        int bpm_int = Math.round(bpm);
+        int bpm_int = (int) Math.round(bpm);
         
-        System.out.println("Guessed tempo: "+ bpm_int+" Beats per Minute");
+        //System.out.println("Guessed tempo: "+ bpm_int+" Beats per Minute");
  
         
-        System.out.println("---------------------------------------");
+        //System.out.println("---------------------------------------");
+        
          // int samplesAnalyzed = 0;
         
 //        while(samplesAnalyzed < dataToFFT.length){
