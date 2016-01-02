@@ -230,7 +230,7 @@ public class WaveletAlgorithm {
             // Aus der AKF sollen in dem Bereich von min_c bis max_c 
             // der Maximalwert gesucht werden:
             int min_c = (int) ( 60./200 * 44100./Math.pow(2,level) );
-            int max_c = (int) ( 60./60 * 44100./Math.pow(2,level) );
+            int max_c = (int) ( 60./100 * 44100./Math.pow(2,level) );
 
             // Peakwert anlegen
             double peak = 0;
@@ -297,39 +297,9 @@ public class WaveletAlgorithm {
                 maximumBPM_count = countBPMs[BPM];
             }
         }
-        
-        // Es wird der am 2. häufigsten gefundene BPM-Wert gesucht:
-        int maximum2BPM = 0;
-        int maximum2BPM_count = 0;
-        for (int BPM = 60; BPM < countBPMs.length; BPM++) {
-            // Ist der aktuelle BPM-Wert häufiger gefunden worden
-            // als der bisher am häufigsten gemerkte?
-            // + das bisherige Maximum wird ignoriert
-            if (countBPMs[BPM] > maximum2BPM_count && BPM != maximumBPM) {
-                // ... dann merke diesen Wert
-                maximum2BPM = BPM;
-                // ... und die Anzahl
-                maximum2BPM_count = countBPMs[BPM];
-            }
-        }
-        
-        // Wenn die zwei gefundenen BPM-Werte keine Vielfachen voneinander
-        // sind, dann nehme den größeren von beiden. (dieser ist im Zweifel genauer)
-        int BPM_result = 0;
-        if (maximumBPM*2 != maximum2BPM && maximum2BPM*2 != maximumBPM) {
-            if (maximumBPM > maximum2BPM) {
-                BPM_result = maximumBPM;
-            } else {
-                BPM_result = maximum2BPM;
-            }
-        } else {
-            BPM_result = maximumBPM;
-        }
-        
-        
-        
+
         // BPM als Ergebnis zurückgeben
-        return BPM_result;
+        return maximumBPM;
         
                  
     }    

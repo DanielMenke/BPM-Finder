@@ -241,7 +241,7 @@ public class MediaControl extends BorderPane {
                 
                 try {
                     
-                    FileWriter fw = new FileWriter("Loop 1 - Algorithmen Vergleich.txt");
+                    FileWriter fw = new FileWriter("Algorithmen Vergleich.txt");
                     BufferedWriter bw = new BufferedWriter(fw);
 
 
