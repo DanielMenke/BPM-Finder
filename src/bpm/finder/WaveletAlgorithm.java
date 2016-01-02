@@ -256,7 +256,7 @@ public class WaveletAlgorithm {
                 double windowBPM = 60./peak_index * (44100./Math.pow(2,level));
                 // und der Liste angehängt.
                 BPMs.add(windowBPM);
-                
+
             }
 
 
@@ -275,6 +275,7 @@ public class WaveletAlgorithm {
             // BPM-Wert runden, es sollen ganze Werte ausgegeben werden.
             int round_BPM = (int) Math.round(current_BPM);
 
+            
             // Wenn der BPM-Wert kleiner ist als 200
             if (round_BPM < 200) {
                 // Dann wird er gezählt
@@ -287,7 +288,7 @@ public class WaveletAlgorithm {
         int maximumBPM = 0;
         int maximumBPM_count = 0;
         for (int BPM = 60; BPM < countBPMs.length; BPM++) {
-            // Ist die aktuelle BPM-Wert häufiger gefunden worden
+            // Ist der aktuelle BPM-Wert häufiger gefunden worden
             // als der bisher am häufigsten gemerkte?
             if (countBPMs[BPM] > maximumBPM_count) {
                 // ... dann merke diesen Wert
@@ -297,8 +298,39 @@ public class WaveletAlgorithm {
             }
         }
         
+        // Es wird der am 2. häufigsten gefundene BPM-Wert gesucht:
+        int maximum2BPM = 0;
+        int maximum2BPM_count = 0;
+        for (int BPM = 60; BPM < countBPMs.length; BPM++) {
+            // Ist der aktuelle BPM-Wert häufiger gefunden worden
+            // als der bisher am häufigsten gemerkte?
+            // + das bisherige Maximum wird ignoriert
+            if (countBPMs[BPM] > maximum2BPM_count && BPM != maximumBPM) {
+                // ... dann merke diesen Wert
+                maximum2BPM = BPM;
+                // ... und die Anzahl
+                maximum2BPM_count = countBPMs[BPM];
+            }
+        }
+
+        
+        // Wenn die zwei gefundenen BPM-Werte keine Vielfachen voneinander
+        // sind, dann nehme den größeren von beiden. (er ist genauer)
+        int BPM_result = 0;
+        if (maximumBPM*2 != maximum2BPM && maximum2BPM*2 != maximumBPM) {
+            if (maximumBPM > maximum2BPM) {
+                BPM_result = maximumBPM;
+            } else {
+                BPM_result = maximum2BPM;
+            }
+        } else {
+            BPM_result = maximumBPM;
+        }
+        
+        
+        
         // BPM als Ergebnis zurückgeben
-        return maximumBPM;
+        return BPM_result;
         
                  
     }    
