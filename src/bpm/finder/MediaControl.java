@@ -241,7 +241,6 @@ public class MediaControl extends BorderPane {
                 
                 try {
                     
-                    
                     FileWriter fw = new FileWriter("Loop 1 - Algorithmen Vergleich.txt");
                     BufferedWriter bw = new BufferedWriter(fw);
 
@@ -261,7 +260,7 @@ public class MediaControl extends BorderPane {
                         int BPM_A1 = BPM_SOUNDENERGY_ALGORITHM.get_bpm();
                         time_needed = System.currentTimeMillis() - start;
                         System.out.println("Soundenergy-Algorithm: "+BPM_A1+" BPM in "+time_needed+" ms");
-                        bw.write("A1: "+file.getName()+": "+BPM_A1+" in "+Long.toString(time_needed)+" ms \n");
+                        bw.write("A1: "+file.getName()+": "+BPM_A1+" in "+Long.toString(time_needed)+" ms \r\n");
                         
                         
                         // ALGORITHMUS A2
@@ -271,7 +270,7 @@ public class MediaControl extends BorderPane {
                         int BPM_A2 = BPM_TRESHOLD_ALGORITHM.get_bpm();
                         time_needed = System.currentTimeMillis() - start;
                         System.out.println("Threshold-Algorithm: "+BPM_A2+" BPM in "+time_needed+" ms");
-                        bw.write("A2: "+file.getName()+": "+BPM_A2+" in "+Long.toString(time_needed)+" ms \n");
+                        bw.write("A2: "+file.getName()+": "+BPM_A2+" in "+Long.toString(time_needed)+" ms \r\n");
                         
                         
                         // ALGORITHMUS A3
@@ -281,12 +280,9 @@ public class MediaControl extends BorderPane {
                         int BPM_A3 = BPM_WAVELET_ALGORITHM.get_bpm();
                         time_needed = System.currentTimeMillis() - start;
                         System.out.println("Wavelet-Algorithm: "+BPM_A3+" BPM in "+time_needed+" ms");
-                        bw.write("A3: "+file.getName()+": "+BPM_A3+" in "+Long.toString(time_needed)+" ms \n");
+                        bw.write("A3: "+file.getName()+": "+BPM_A3+" in "+Long.toString(time_needed)+" ms \r\n");
 
 
-                        break;
-                        
-                        
                     }
 
                     bw.close();
