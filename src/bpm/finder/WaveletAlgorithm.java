@@ -15,6 +15,7 @@ public class WaveletAlgorithm {
     
     private File currentFile;
     private WavFile wavFile;
+    private MediaControl mc;
        
     private double[] process_coefficients(double[] detection_function, double[] decomposition, int start, int end) {
 
@@ -91,7 +92,7 @@ public class WaveletAlgorithm {
         // Audiodaten laden
         double[][] WavData = getWavData();
         double[] audioProcessData = WavData[0];
-        
+        mc.waveletAlgorithmProgress.setProgress(0.1);
         // Gesamtlänge des Audiosignals in Samples
         int length = audioProcessData.length;
         
@@ -116,7 +117,7 @@ public class WaveletAlgorithm {
 
             }
         }
-        
+        mc.waveletAlgorithmProgress.setProgress(0.5);
         // In jedem Fenster wird EIN BPM-Wert ermittelt und einer Liste 
         // angefügt:
         // Liste für die gefundenen BPMs:
@@ -188,6 +189,8 @@ public class WaveletAlgorithm {
                 // 2) Die "Detection function" ergibt sich aus der Zusammensetzung (Summe)
                 // der einzeln verarbeiteten Koeffizientenfolgen:
                 detection_function = process_coefficients(detection_function, decomposition, start, end);
+                
+                
 
             }
 
@@ -219,6 +222,7 @@ public class WaveletAlgorithm {
             for (int i = 0; i < AKF_real.length; i++) {
                 AKF_real[i] = AKF_real[i]*AKF_real[i] + AKF_imag[i]*AKF_imag[i];
                 AKF_imag[i] = 0;
+           
             }
             
             // IFFT
@@ -260,8 +264,9 @@ public class WaveletAlgorithm {
             }
 
 
-
+            mc.waveletAlgorithmProgress.setProgress(mc.waveletAlgorithmProgress.getProgress()+0.4/Windows.length);
         }
+
         // Ende der For-Schleife für die einzelnen Fenster
         
         
@@ -281,9 +286,10 @@ public class WaveletAlgorithm {
                 // Dann wird er gezählt
                 countBPMs[round_BPM]++;
             }
+            mc.waveletAlgorithmProgress.setProgress(mc.waveletAlgorithmProgress.getProgress()+0.1/BPMs.size());
             
         }
-        
+
         // Es wird der am häufigsten gefundene BPM-Wert gesucht:
         int maximumBPM = 0;
         int maximumBPM_count = 0;
@@ -297,7 +303,7 @@ public class WaveletAlgorithm {
                 maximumBPM_count = countBPMs[BPM];
             }
         }
-
+        mc.waveletAlgorithmProgress.setProgress(1.0);
         // BPM als Ergebnis zurückgeben
         return maximumBPM;
         
@@ -374,6 +380,10 @@ public class WaveletAlgorithm {
             return false;            
         }
         
+    }
+    
+    public void setMediaControl(MediaControl mc){
+        this.mc = mc;
     }
     
 }

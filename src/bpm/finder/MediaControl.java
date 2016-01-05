@@ -8,23 +8,21 @@ package bpm.finder;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-
-import static javafx.application.ConditionalFeature.FXML;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.chart.XYChart;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Slider;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.media.Media;
@@ -33,14 +31,12 @@ import javafx.scene.media.MediaPlayer.Status;
 import javafx.scene.media.MediaView;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
-import javafx.scene.chart.AreaChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.media.AudioSpectrumListener;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Border;
 
-public class MediaControl extends BorderPane {
+public class MediaControl extends AnchorPane implements Initializable {
 
-    private ThresholdBPMFinder BPM_TRESHOLD_ALGORITHM;
+    private LowPassPeakAlgorithm BPM_PEAK_ALGORITHM;
     private SoundEnergyAlgorithm BPM_SOUNDENERGY_ALGORITHM;
     private WaveletAlgorithm BPM_WAVELET_ALGORITHM;
     private MediaPlayer mp;
@@ -48,83 +44,166 @@ public class MediaControl extends BorderPane {
     private FileHandler fileHandler;
     private FileChooser fc;
     private Media media;
-
-    @FXML private MediaView mediaView;
+    @FXML
+    private MediaView mediaView;
     private final boolean repeat = false;
     private boolean stopRequested = false;
     private boolean atEndOfMedia = false;
     private Duration duration;
-    @FXML private Slider timeSlider;
-    @FXML private Label playTime;
-    @FXML private Slider volumeSlider;
-    @FXML private HBox mediaBar;
-    @FXML private HBox wavBox;
-    @FXML private Button playButton;
-    @FXML private Button openFileButton = new Button("OpenFile");
-    @FXML private Button runSoundEnergyButton = new Button("Soundenergie Algorithmus");
-    @FXML private Button runThresholdMethodButton = new Button("Tiefpass&Peaks Algorithmus");
-    @FXML private Button runWaveletButton = new Button("Wavelet Algorithmus");
-    
-    @FXML private Button runBenchmarkButton = new Button("Benchmark");
-    
+    @FXML
+    private Slider timeSlider;
+    @FXML
+    private Label playTime;
+    @FXML
+    private Slider volumeSlider;
+    @FXML
+    private Button playPauseButton;
+    @FXML
+    private Button openFileButton = new Button("OpenFile");
+
+    @FXML
+    private Button runBenchmarkButton = new Button("Benchmark");
+    @FXML
+    private Button analyzeTempoButton = new Button();
+    @FXML
+    public ProgressBar soundEnergyAlgorithmProgress = new ProgressBar();
+    @FXML
+    public ProgressBar peakAlgorithmProgress = new ProgressBar();
+    @FXML
+    public ProgressBar waveletAlgorithmProgress = new ProgressBar();
+    @FXML
+    private TextField soundEnergyAlgorithmBPMField = new TextField();
+    @FXML
+    private TextField peakAlgorithmBPMField = new TextField();
+    @FXML
+    private TextField waveletAlgorithmBPMField = new TextField();
+    @FXML
+    private TextField tracknameField = new TextField();
+
     private static final int HOUR_IN_MINUTES = 60;
     private static final int MINUTE_IN_SECONDS = 60;
     private static final int HOUR_IN_SECONDS = HOUR_IN_MINUTES * MINUTE_IN_SECONDS;
 
-    public MediaControl(MediaPlayer mp) {
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        
+         volumeSlider.valueProperty().addListener(new InvalidationListener() {
+            public void invalidated(Observable ov) {
+                if (volumeSlider.isValueChanging()) {
+                    mediaView.getMediaPlayer().setVolume(volumeSlider.getValue() / 100);
+                }
+            }
+        });
+        openFileButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+
+                track = fileHandler.openFile();
+
+                if (track != null) {
+                    mediaView.getMediaPlayer().stop();
+                    mediaView.getMediaPlayer().dispose();
+                    mediaView.setMediaPlayer(track);
+                    applyListeners();
+                    System.out.println(track.getCurrentTime());
+                    analyzeTempoButton.setDisable(false);
+                    BPM_SOUNDENERGY_ALGORITHM.setWAV(fileHandler.getFile());
+                    BPM_PEAK_ALGORITHM.setWAV(fileHandler.getFile());
+                    BPM_WAVELET_ALGORITHM.setWAV(fileHandler.getFile());
+                    tracknameField.setText(fileHandler.getFileName());
+                    updateValues();
+                }
+            }
+        });
+         //Set playButton text when running
+        
+        mediaView.getMediaPlayer().setOnPlaying(new Runnable() {
+            @Override
+            public void run() {
+                if (stopRequested) {
+                    mediaView.getMediaPlayer().pause();
+                    stopRequested = false;
+                } else {
+                    
+                }
+            }
+        });
+        //Set playButton text when paused
+        mediaView.getMediaPlayer().setOnPaused(new Runnable() {
+            @Override
+            public void run() {
+                
+            }
+        });
+        //When ready get Duration and update UI
+        mediaView.getMediaPlayer().setOnReady(new Runnable() {
+            @Override
+            public void run() {
+                duration = mediaView.getMediaPlayer().getMedia().getDuration();
+                updateValues();
+                System.out.println("Update ready");
+            }
+        });
+        
+        playPauseButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            
+            public void handle(ActionEvent event) {
+                Status status = mediaView.getMediaPlayer().getStatus();
+
+                switch (status) {
+                    case UNKNOWN:
+                        break;
+                    case HALTED:
+                        break;
+                    case PAUSED:
+                      mediaView.getMediaPlayer().play();
+                        break;
+                    case READY:
+                    case STOPPED:
+                      
+                        if (atEndOfMedia) {
+                            mediaView.getMediaPlayer().seek(mediaView.getMediaPlayer().getStartTime());
+
+                        }
+                        mediaView.getMediaPlayer().play();
+                        break;
+                    default:
+                        mediaView.getMediaPlayer().pause();
+
+                }
+            }
+        });
+    
+        
        
-        this.mp = mp;
+    }
+
+    public MediaControl() {
+        media = new Media("http://download.oracle.com/otndocs/products/javafx/oow2010-2.flv");
+        mp = new MediaPlayer(media);
         setStyle("-fx-background-color: #22c7;");
         mediaView = new MediaView(mp);
         fileHandler = new FileHandler();
-        
+
         // 3 Algorithmen
         BPM_SOUNDENERGY_ALGORITHM = new SoundEnergyAlgorithm();
+        BPM_SOUNDENERGY_ALGORITHM.setMediaControl(this);
         BPM_WAVELET_ALGORITHM = new WaveletAlgorithm();
-        BPM_TRESHOLD_ALGORITHM = new ThresholdBPMFinder();
+        BPM_WAVELET_ALGORITHM.setMediaControl(this);
+        BPM_PEAK_ALGORITHM = new LowPassPeakAlgorithm();
+        BPM_PEAK_ALGORITHM.setMediaControl(this);
+        
         
         updateValues();
-        mediaBar = new HBox();
-        mediaBar.setAlignment(Pos.CENTER);
-        mediaBar.setPadding(new Insets(5, 10, 5, 10));
-        mediaBar.setMinHeight(100);
-        BorderPane.setAlignment(mediaBar, Pos.CENTER);
-        
-        //Add Open File Button
-        mediaBar.getChildren().add(openFileButton);
-        
-        // Add Start SoundEnergyAlgorithm Button
-        mediaBar.getChildren().add(runSoundEnergyButton);
-        // Add ThresholdMethod Button
-        mediaBar.getChildren().add(runThresholdMethodButton);
-        // Add Wavelet-Algorithmus Button
-        mediaBar.getChildren().add(runWaveletButton);
-        
-        wavBox = new HBox();
-        wavBox.setAlignment(Pos.CENTER);
-        wavBox.setMinHeight(250);
-        wavBox.setPadding(new Insets(5, 10, 5, 10));
-        
-        // Add runBenchmarkButton Button
-        //wavBox.getChildren().add(runBenchmarkButton);
-        
-        BorderPane.setAlignment(wavBox, Pos.CENTER);
-        setTop(wavBox);
-        wavBox.setStyle("-fx-background-color: #FFFFFF;");
-        
-        
-        //Add play Button
-        playButton = new Button(">");
-        mediaBar.getChildren().add(playButton);
-        setBottom(mediaBar);
 
-        //Add spacer
-        Label spacer = new Label("  ");
-        mediaBar.getChildren().add(spacer);
+        playPauseButton = new Button();
 
         //Add time label 
+
         Label timeLabel = new Label("Time: ");
-        mediaBar.getChildren().add(timeLabel);
 
         //Add time slider
         timeSlider = new Slider();
@@ -142,17 +221,14 @@ public class MediaControl extends BorderPane {
             }
         });
 
-        mediaBar.getChildren().add(timeSlider);
-
+        
         //Add play label
         playTime = new Label();
         playTime.setPrefWidth(130);
         playTime.setMinWidth(50);
-        mediaBar.getChildren().add(playTime);
 
         //Add the volume label
         Label volumeLabel = new Label("Vol: ");
-        mediaBar.getChildren().add(volumeLabel);
 
         //Add volume slider
         volumeSlider = new Slider();
@@ -160,159 +236,24 @@ public class MediaControl extends BorderPane {
         volumeSlider.setMaxWidth(Region.USE_PREF_SIZE);
         volumeSlider.setMinWidth(30);
 
-        volumeSlider.valueProperty().addListener(new InvalidationListener() {
-            public void invalidated(Observable ov) {
-                if (volumeSlider.isValueChanging()) {
-                    mediaView.getMediaPlayer().setVolume(volumeSlider.getValue() / 100);
-                }
-            }
-        });
-        mediaBar.getChildren().add(volumeSlider);
-
-        //EventHandling
-        
-        //runSoundEnergyButton Button Click
-        runSoundEnergyButton.setOnAction(new EventHandler<ActionEvent>() {
+        playPauseButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
-            public void handle(ActionEvent event) {
-               
-                if (BPM_SOUNDENERGY_ALGORITHM.isReady()) {
-                    
-                    Thread analyzingThread = new Thread (new Runnable(){
-                       public void run(){
-                          int BPM = BPM_SOUNDENERGY_ALGORITHM.get_bpm();
-                          System.out.println(BPM);
-                       } 
-                    });
-                    analyzingThread.start();
-
-                } else {
-                    System.out.println("not ready. (Missing WAV?)");
-                }
-
-            }
-        });
-        
-        // Threshold Method Button Click
-        runThresholdMethodButton.setOnAction(new EventHandler<ActionEvent>() {
             
-            @Override
-            public void handle(ActionEvent event) {
-                
-              Thread analyzingThread = new Thread (new Runnable(){
-                 public void run(){
-                    int BPM = BPM_TRESHOLD_ALGORITHM.get_bpm();
-                    System.out.println(BPM);
-                 } 
-              });
-                analyzingThread.start();
-            }
-        });
-        
-        //runWaveletButton Button Click
-        runWaveletButton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent event) {
-               
-                if (BPM_WAVELET_ALGORITHM.isReady()) {
-                    
-                    Thread analyzingThread = new Thread (new Runnable(){
-                       public void run(){
-                          int BPM = BPM_WAVELET_ALGORITHM.get_bpm();
-                          System.out.println(BPM);
-                       } 
-                    });
-                    analyzingThread.start();
-
-                } else {
-                    System.out.println("not ready. (Missing WAV?)");
-                }
-
-            }
-        });
-        
-        //Benchmark Button Click
-        runBenchmarkButton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent event) {
-                
-                try {
-                    
-                    FileWriter fw = new FileWriter("Algorithmen Vergleich.txt");
-                    BufferedWriter bw = new BufferedWriter(fw);
-
-
-                    File[] files = new File("D:\\pyth\\Loop 1").listFiles();
-                    long start;
-                    long time_needed;
-                    for (File file : files) {
-
-                       System.out.println("Now coming: " + file.getName());
-
-                       
-                        // ALGORITHMUS A1
-                        BPM_SOUNDENERGY_ALGORITHM.setWAV(file);
-                        
-                        start = System.currentTimeMillis();
-                        int BPM_A1 = BPM_SOUNDENERGY_ALGORITHM.get_bpm();
-                        time_needed = System.currentTimeMillis() - start;
-                        System.out.println("Soundenergy-Algorithm: "+BPM_A1+" BPM in "+time_needed+" ms");
-                        bw.write("A1: "+file.getName()+": "+BPM_A1+" in "+Long.toString(time_needed)+" ms \r\n");
-                        
-                        
-                        // ALGORITHMUS A2
-                        BPM_TRESHOLD_ALGORITHM.setWAV(file);
-                        
-                        start = System.currentTimeMillis();
-                        int BPM_A2 = BPM_TRESHOLD_ALGORITHM.get_bpm();
-                        time_needed = System.currentTimeMillis() - start;
-                        System.out.println("Threshold-Algorithm: "+BPM_A2+" BPM in "+time_needed+" ms");
-                        bw.write("A2: "+file.getName()+": "+BPM_A2+" in "+Long.toString(time_needed)+" ms \r\n");
-                        
-                        
-                        // ALGORITHMUS A3
-                        BPM_WAVELET_ALGORITHM.setWAV(file);
-                        
-                        start = System.currentTimeMillis();
-                        int BPM_A3 = BPM_WAVELET_ALGORITHM.get_bpm();
-                        time_needed = System.currentTimeMillis() - start;
-                        System.out.println("Wavelet-Algorithm: "+BPM_A3+" BPM in "+time_needed+" ms");
-                        bw.write("A3: "+file.getName()+": "+BPM_A3+" in "+Long.toString(time_needed)+" ms \r\n");
-
-
-                    }
-
-                    bw.close();
-                    
-                } catch (Exception e) {
-
-                    System.out.println(e);
-
-                } 
-
-                
-                
-            }
-        });
-        
-        //Play button event
-        playButton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
-                
+
                 switch (status) {
                     case UNKNOWN:
                         break;
                     case HALTED:
                         break;
                     case PAUSED:
+                     
+                        break;
                     case READY:
                     case STOPPED:
+                      
                         if (atEndOfMedia) {
                             mediaView.getMediaPlayer().seek(mediaView.getMediaPlayer().getStartTime());
 
@@ -323,69 +264,128 @@ public class MediaControl extends BorderPane {
                         mediaView.getMediaPlayer().pause();
 
                 }
-           
             }
         });
-        //Open File Button Handling
-
-        openFileButton.setOnAction(new EventHandler<ActionEvent>() {
+        
+        runBenchmarkButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
-                
-                track = fileHandler.openFile();
-              
-                if (track != null) {
-                    wavBox.getChildren().clear();
-                    mediaView.getMediaPlayer().stop();
-                    mediaView.getMediaPlayer().dispose();
-                    mediaView.setMediaPlayer(track);
-                    applyListeners();
-                    System.out.println(track.getCurrentTime());
-                    
-                    BPM_SOUNDENERGY_ALGORITHM.setWAV(fileHandler.getFile());
-                    BPM_TRESHOLD_ALGORITHM.setWAV(fileHandler.getFile());
-                    BPM_WAVELET_ALGORITHM.setWAV(fileHandler.getFile());
-                    
-                    updateValues();
+
+                try {
+
+                    FileWriter fw = new FileWriter("Algorithmen Vergleich.txt");
+                    BufferedWriter bw = new BufferedWriter(fw);
+
+                    File[] files = new File("D:\\pyth\\Loop 1").listFiles();
+                    long start;
+                    long time_needed;
+                    for (File file : files) {
+
+                        System.out.println("Now coming: " + file.getName());
+
+                        // ALGORITHMUS A1
+                        BPM_SOUNDENERGY_ALGORITHM.setWAV(file);
+
+                        start = System.currentTimeMillis();
+                        int BPM_A1 = BPM_SOUNDENERGY_ALGORITHM.get_bpm();
+                        time_needed = System.currentTimeMillis() - start;
+                        System.out.println("Soundenergy-Algorithm: " + BPM_A1 + " BPM in " + time_needed + " ms");
+                        bw.write("A1: " + file.getName() + ": " + BPM_A1 + " in " + Long.toString(time_needed) + " ms \r\n");
+
+                        // ALGORITHMUS A2
+                        BPM_PEAK_ALGORITHM.setWAV(file);
+
+                        start = System.currentTimeMillis();
+                        int BPM_A2 = BPM_PEAK_ALGORITHM.get_bpm();
+                        time_needed = System.currentTimeMillis() - start;
+                        System.out.println("Threshold-Algorithm: " + BPM_A2 + " BPM in " + time_needed + " ms");
+                        bw.write("A2: " + file.getName() + ": " + BPM_A2 + " in " + Long.toString(time_needed) + " ms \r\n");
+
+                        // ALGORITHMUS A3
+                        BPM_WAVELET_ALGORITHM.setWAV(file);
+
+                        start = System.currentTimeMillis();
+                        int BPM_A3 = BPM_WAVELET_ALGORITHM.get_bpm();
+                        time_needed = System.currentTimeMillis() - start;
+                        System.out.println("Wavelet-Algorithm: " + BPM_A3 + " BPM in " + time_needed + " ms");
+                        bw.write("A3: " + file.getName() + ": " + BPM_A3 + " in " + Long.toString(time_needed) + " ms \r\n");
+
+                    }
+
+                    bw.close();
+
+                } catch (Exception e) {
+
+                    System.out.println(e);
+
                 }
+
             }
         });
-        applyListeners();
         
-    }
-    
+        //Play button event
+       
 
-    protected void applyListeners(){
-        
+        applyListeners();
+
+    }
+
+    @FXML
+    protected void analyzeTempo() {
+
+        if (BPM_SOUNDENERGY_ALGORITHM.isReady()) {
+
+            Thread analyzingThread1 = new Thread(new Runnable() {
+                public void run() {
+                    
+                    String BPM_1 = Integer.toString(BPM_SOUNDENERGY_ALGORITHM.get_bpm());
+                   
+                    soundEnergyAlgorithmBPMField.setText(BPM_1 + " BPM");
+
+                }
+            });
+            analyzingThread1.start();
+
+        } else {
+            System.out.println("not ready. (Missing WAV?)");
+        }
+
+        Thread analyzingThread2 = new Thread(new Runnable() {
+            public void run() {
+                String BPM_2 = Integer.toString(BPM_PEAK_ALGORITHM.get_bpm());
+                peakAlgorithmBPMField.setText(BPM_2 + " BPM");
+
+            }
+        });
+        analyzingThread2.start();
+
+        if (BPM_WAVELET_ALGORITHM.isReady()) {
+
+            Thread analyzingThread3 = new Thread(new Runnable() {
+                public void run() {
+                    String BPM_3 = Integer.toString(BPM_WAVELET_ALGORITHM.get_bpm());
+                    waveletAlgorithmBPMField.setText(BPM_3 + " BPM");
+                }
+            });
+            analyzingThread3.start();
+
+        } else {
+            System.out.println("not ready. (Missing WAV?)");
+        }
+
+    }
+
+    protected void applyListeners() {
+
         mediaView.getMediaPlayer().currentTimeProperty().addListener(new InvalidationListener() {
-      
-                 @Override
+
+            @Override
             public void invalidated(Observable ov) {
                 updateValues();
             }
         });
-        //Set playButton text when running
-        mediaView.getMediaPlayer().setOnPlaying(new Runnable() {
-            @Override
-            public void run() {
-                if (stopRequested) {
-                    mediaView.getMediaPlayer().pause();
-                    stopRequested = false;
-                } else {
-                    playButton.setText("||");
-                }
-            }
-        });
-        //Set playButton text when paused
-        mediaView.getMediaPlayer().setOnPaused(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("onPaused");
-                playButton.setText(">");
-                System.out.println("Update paused");
-            }
-        });
+      
         //When ready get Duration and update UI
         mediaView.getMediaPlayer().setOnReady(new Runnable() {
             @Override
@@ -396,40 +396,38 @@ public class MediaControl extends BorderPane {
             }
         });
 
-        //Repeat Mode for testing, can be removed later
-        mediaView.getMediaPlayer().setCycleCount(repeat ? MediaPlayer.INDEFINITE : 1);
-
-        //
+     
         mediaView.getMediaPlayer().setOnEndOfMedia(new Runnable() {
             public void run() {
                 if (!repeat) {
-                    playButton.setText(">");
+                    playPauseButton.setText(">");
                     stopRequested = true;
                     atEndOfMedia = true;
-                    System.out.println("Update ready");
+                  
                 }
             }
         });
     }
+    @FXML
+    
     protected void updateValues() {
-        
-       
+
         if (playTime != null && timeSlider != null && volumeSlider != null) {
-             
+
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
                     Duration currentTime = mediaView.getMediaPlayer().getCurrentTime();
-                    
-                    
-                    
+
                     playTime.setText(formatTime(currentTime, duration));
                     timeSlider.setDisable(duration.isUnknown());
                     //System.out.println("UpdateValues");
 
                     if (!timeSlider.isDisabled()
                             && duration.greaterThan(Duration.ZERO)
-                            && !timeSlider.isValueChanging()) {
+                            && !timeSlider.isValueChanging())
+                            
+                    {
                         timeSlider.setValue(currentTime.divide(duration).toMillis() * 100);
                     }
                     if (!volumeSlider.isValueChanging()) {
@@ -440,7 +438,55 @@ public class MediaControl extends BorderPane {
             });
         }
     }
-    
+    @FXML
+    public void playButtonPressed(){
+        playPauseButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            
+            public void handle(ActionEvent event) {
+                Status status = mediaView.getMediaPlayer().getStatus();
+
+                switch (status) {
+                    case UNKNOWN:
+                        break;
+                    case HALTED:
+                        break;
+                    case PAUSED:
+                     
+                        break;
+                    case READY:
+                    case STOPPED:
+                      
+                        if (atEndOfMedia) {
+                            mediaView.getMediaPlayer().seek(mediaView.getMediaPlayer().getStartTime());
+
+                        }
+                        mediaView.getMediaPlayer().play();
+                        break;
+                    default:
+                        mediaView.getMediaPlayer().pause();
+
+                }
+            }
+        });
+    }
+    @FXML
+    public void timeSliderMoved() {
+
+        timeSlider.valueProperty().addListener(new InvalidationListener() {
+            @Override
+            public void invalidated(Observable ov) {
+                if (timeSlider.isValueChanging()||timeSlider.isPressed()) {
+                    //multiply duration by percentage calculated by slider position
+                    mediaView.getMediaPlayer().seek(duration.multiply(timeSlider.getValue() / 100.0));
+                }
+            }
+        });
+    }
+
+
+
     private String formatTime(Duration elapsed, Duration duration) {
         int intElapsed = (int) Math.floor(elapsed.toSeconds());
 
@@ -473,14 +519,13 @@ public class MediaControl extends BorderPane {
                         elapsedMinutes, elapsedSeconds, durationMinutes,
                         durationSeconds);
             }
+        } else if (elapsedHours > 0) {
+            return String.format("%d:%02d:%02d",
+                    elapsedHours, elapsedMinutes, elapsedSeconds);
         } else {
-            if (elapsedHours > 0) {
-                return String.format("%d:%02d:%02d",
-                        elapsedHours, elapsedMinutes, elapsedSeconds);
-            } else {
-                return String.format("%02d:%02d",
-                        elapsedMinutes, elapsedSeconds);
-            }
+            return String.format("%02d:%02d",
+                    elapsedMinutes, elapsedSeconds);
         }
     }
+
 }

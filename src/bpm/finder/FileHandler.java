@@ -16,7 +16,7 @@ public class FileHandler extends BorderPane {
     private MediaPlayer mp;
     private Media media;
     private File file;
-
+    private boolean ready = false;
     public FileHandler( ) {
 
 
@@ -33,7 +33,7 @@ public class FileHandler extends BorderPane {
             media = new Media(file.toURI().toASCIIString());
 
             mp = new MediaPlayer(media);
-           
+            ready = true;
             return mp;
           
             
@@ -47,5 +47,12 @@ public class FileHandler extends BorderPane {
         
         return this.file;
         
+    }
+    public boolean fileLoaded(){
+        
+        return ready;
+    }
+    public String getFileName(){
+        return file.getName();
     }
 }

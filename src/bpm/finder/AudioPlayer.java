@@ -6,12 +6,17 @@
 package bpm.finder;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.media.AudioSpectrumListener;
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.media.*;
@@ -34,18 +39,21 @@ public class AudioPlayer extends Application {
     public void start(Stage primaryStage) {
         
         
-        Group root = new Group();
-        Scene scene = new Scene(root, 1024 , 500);
-        MediaPlayer mediaPlayer = new MediaPlayer(media);
-        MediaControl mediaControl = new MediaControl(mediaPlayer);
-        scene.setRoot(mediaControl);
-        primaryStage.setTitle("BPM-Finder");
-        primaryStage.setScene(scene);
-        primaryStage.show();
-        
-        //mediaPlayer.play();
-    }
+      try {
 
+            
+            Parent root = FXMLLoader.load(getClass().getResource("MediaControl.fxml"));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("mediacontrol.css").toExternalForm());
+
+            primaryStage.setTitle("BPM-Finder");
+            primaryStage.setScene(scene);
+            primaryStage.show();
+            
+        } catch (IOException ex) {
+            Logger.getLogger(AudioPlayer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     public static void main(String[] args) {
         launch(args);
     }
