@@ -7,10 +7,7 @@ import jwave.Transform;
 import jwave.transforms.FastWaveletTransform;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
 
-/**
- *
- * @author Stefan
- */
+
 public class WaveletAlgorithm {
     
     private File currentFile;

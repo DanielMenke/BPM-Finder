@@ -15,26 +15,36 @@
    <children>
       <Slider fx:id="timeSlider" layoutX="256.0" layoutY="363.0" onMouseClicked="#timeSliderMoved" prefHeight="13.0" prefWidth="338.0" />
       <Button id="openFileButton" fx:id="openFileButton" layoutX="56.0" layoutY="391.0" mnemonicParsing="false" style="-fx-border-color: #d3d3d3;" styleClass="openFileButton" stylesheets="@mediacontrol.css" text="Datei Öffnen" />
-      <Button id="analyzeButton" fx:id="analyzeTempoButton" alignment="CENTER" disable="true" layoutX="354.0" layoutY="321.0" mnemonicParsing="false" onAction="#analyzeTempo" style="-fx-border-color: #d3d3d3;" styleClass="openFileButton" stylesheets="@mediacontrol.css" text="Tempo analysieren">
+      <Button id="analyzeButton" fx:id="analyzeTempoButton" alignment="CENTER" disable="true" layoutX="352.0" layoutY="317.0" mnemonicParsing="false" onAction="#analyzeTempo" style="-fx-border-color: #d3d3d3;" styleClass="openFileButton" stylesheets="@mediacontrol.css" text="Tempo analysieren">
          <font>
             <Font name="Calibri" size="16.0" />
          </font></Button>
       <Pane fx:id="soundEnergyAlgortihmPanel" layoutX="56.0" layoutY="79.0" prefHeight="200.0" prefWidth="200.0" styleClass="bpmPanel">
          <children>
             <ProgressBar fx:id="soundEnergyAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
-            <TextField fx:id="soundEnergyAlgorithmBPMField" alignment="CENTER" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
+            <TextField fx:id="soundEnergyAlgorithmBPMField" alignment="CENTER" editable="false" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
                <font>
                   <Font name="Calibri" size="22.0" />
+               </font>
+            </TextField>
+            <TextField fx:id="soundEnergyAlgorithmTime" alignment="CENTER" blendMode="MULTIPLY" editable="false" layoutX="55.0" layoutY="184.0" opacity="0.7" prefHeight="21.0" prefWidth="90.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="11.0" />
                </font>
             </TextField>
          </children>
       </Pane>
       <Pane fx:id="peakAlgortihmPanel" layoutX="325.0" layoutY="79.0" prefHeight="200.0" prefWidth="200.0" styleClass="bpmPanel">
          <children>
-            <ProgressBar fx:id="peakAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
-            <TextField fx:id="peakAlgorithmBPMField" alignment="CENTER" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
+            <ProgressBar fx:id="lowpassPeakAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
+            <TextField fx:id="lowpassPeakAlgorithmBPMField" alignment="CENTER" editable="false" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
                <font>
                   <Font name="Calibri" size="22.0" />
+               </font>
+            </TextField>
+            <TextField fx:id="lowpassPeakAlgorithmTime" alignment="CENTER" blendMode="MULTIPLY" editable="false" layoutX="56.0" layoutY="184.0" opacity="0.7" prefHeight="21.0" prefWidth="90.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="11.0" />
                </font>
             </TextField>
          </children>
@@ -42,9 +52,14 @@
       <Pane fx:id="waveletAlgortihmPanel" layoutX="594.0" layoutY="79.0" prefHeight="200.0" prefWidth="200.0" styleClass="bpmPanel">
          <children>
             <ProgressBar fx:id="waveletAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
-            <TextField fx:id="waveletAlgorithmBPMField" alignment="CENTER" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
+            <TextField fx:id="waveletAlgorithmBPMField" alignment="CENTER" editable="false" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
                <font>
                   <Font name="Calibri" size="22.0" />
+               </font>
+            </TextField>
+            <TextField fx:id="waveLetAlgorithmTime" alignment="CENTER" blendMode="MULTIPLY" editable="false" layoutX="56.0" layoutY="184.0" opacity="0.7" prefHeight="21.0" prefWidth="90.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="11.0" />
                </font>
             </TextField>
          </children>

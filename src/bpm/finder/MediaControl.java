@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package bpm.finder;
 
 import java.io.BufferedWriter;
@@ -10,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -32,7 +29,6 @@ import javafx.scene.media.MediaView;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Border;
 
 public class MediaControl extends AnchorPane implements Initializable {
 
@@ -55,6 +51,12 @@ public class MediaControl extends AnchorPane implements Initializable {
     @FXML
     private Label playTime;
     @FXML
+    private TextField soundEnergyAlgorithmTime;
+    @FXML
+    private TextField lowpassPeakAlgorithmTime;
+    @FXML
+    private TextField waveLetAlgorithmTime;
+    @FXML
     private Slider volumeSlider;
     @FXML
     private Button playPauseButton;
@@ -68,13 +70,13 @@ public class MediaControl extends AnchorPane implements Initializable {
     @FXML
     public ProgressBar soundEnergyAlgorithmProgress = new ProgressBar();
     @FXML
-    public ProgressBar peakAlgorithmProgress = new ProgressBar();
+    public ProgressBar lowpassPeakAlgorithmProgress = new ProgressBar();
     @FXML
     public ProgressBar waveletAlgorithmProgress = new ProgressBar();
     @FXML
     private TextField soundEnergyAlgorithmBPMField = new TextField();
     @FXML
-    private TextField peakAlgorithmBPMField = new TextField();
+    private TextField lowpassPeakAlgorithmBPMField = new TextField();
     @FXML
     private TextField waveletAlgorithmBPMField = new TextField();
     @FXML
@@ -86,8 +88,8 @@ public class MediaControl extends AnchorPane implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        
-         volumeSlider.valueProperty().addListener(new InvalidationListener() {
+
+        volumeSlider.valueProperty().addListener(new InvalidationListener() {
             public void invalidated(Observable ov) {
                 if (volumeSlider.isValueChanging()) {
                     mediaView.getMediaPlayer().setVolume(volumeSlider.getValue() / 100);
@@ -100,13 +102,12 @@ public class MediaControl extends AnchorPane implements Initializable {
             public void handle(ActionEvent event) {
 
                 track = fileHandler.openFile();
-
+                ClearDisplays();
                 if (track != null) {
                     mediaView.getMediaPlayer().stop();
                     mediaView.getMediaPlayer().dispose();
                     mediaView.setMediaPlayer(track);
                     applyListeners();
-                    System.out.println(track.getCurrentTime());
                     analyzeTempoButton.setDisable(false);
                     BPM_SOUNDENERGY_ALGORITHM.setWAV(fileHandler.getFile());
                     BPM_PEAK_ALGORITHM.setWAV(fileHandler.getFile());
@@ -116,8 +117,8 @@ public class MediaControl extends AnchorPane implements Initializable {
                 }
             }
         });
-         //Set playButton text when running
-        
+        //Set playButton text when running
+
         mediaView.getMediaPlayer().setOnPlaying(new Runnable() {
             @Override
             public void run() {
@@ -125,7 +126,7 @@ public class MediaControl extends AnchorPane implements Initializable {
                     mediaView.getMediaPlayer().pause();
                     stopRequested = false;
                 } else {
-                    
+
                 }
             }
         });
@@ -133,7 +134,7 @@ public class MediaControl extends AnchorPane implements Initializable {
         mediaView.getMediaPlayer().setOnPaused(new Runnable() {
             @Override
             public void run() {
-                
+
             }
         });
         //When ready get Duration and update UI
@@ -142,14 +143,13 @@ public class MediaControl extends AnchorPane implements Initializable {
             public void run() {
                 duration = mediaView.getMediaPlayer().getMedia().getDuration();
                 updateValues();
-                System.out.println("Update ready");
             }
         });
-        
+
         playPauseButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
-            
+
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
 
@@ -159,11 +159,11 @@ public class MediaControl extends AnchorPane implements Initializable {
                     case HALTED:
                         break;
                     case PAUSED:
-                      mediaView.getMediaPlayer().play();
+                        mediaView.getMediaPlayer().play();
                         break;
                     case READY:
                     case STOPPED:
-                      
+
                         if (atEndOfMedia) {
                             mediaView.getMediaPlayer().seek(mediaView.getMediaPlayer().getStartTime());
 
@@ -176,9 +176,7 @@ public class MediaControl extends AnchorPane implements Initializable {
                 }
             }
         });
-    
-        
-       
+
     }
 
     public MediaControl() {
@@ -195,17 +193,13 @@ public class MediaControl extends AnchorPane implements Initializable {
         BPM_WAVELET_ALGORITHM.setMediaControl(this);
         BPM_PEAK_ALGORITHM = new LowPassPeakAlgorithm();
         BPM_PEAK_ALGORITHM.setMediaControl(this);
-        
-        
+
         updateValues();
 
         playPauseButton = new Button();
 
-        //Add time label 
-
         Label timeLabel = new Label("Time: ");
 
-        //Add time slider
         timeSlider = new Slider();
         HBox.setHgrow(timeSlider, Priority.ALWAYS);
         timeSlider.setMinWidth(50);
@@ -215,22 +209,18 @@ public class MediaControl extends AnchorPane implements Initializable {
             @Override
             public void invalidated(Observable ov) {
                 if (timeSlider.isValueChanging()) {
-                    //multiply duration by percentage calculated by slider position
+
                     mediaView.getMediaPlayer().seek(duration.multiply(timeSlider.getValue() / 100.0));
                 }
             }
         });
 
-        
-        //Add play label
         playTime = new Label();
         playTime.setPrefWidth(130);
         playTime.setMinWidth(50);
 
-        //Add the volume label
         Label volumeLabel = new Label("Vol: ");
 
-        //Add volume slider
         volumeSlider = new Slider();
         volumeSlider.setPrefWidth(70);
         volumeSlider.setMaxWidth(Region.USE_PREF_SIZE);
@@ -239,7 +229,7 @@ public class MediaControl extends AnchorPane implements Initializable {
         playPauseButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
-            
+
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
 
@@ -249,11 +239,11 @@ public class MediaControl extends AnchorPane implements Initializable {
                     case HALTED:
                         break;
                     case PAUSED:
-                     
+
                         break;
                     case READY:
                     case STOPPED:
-                      
+
                         if (atEndOfMedia) {
                             mediaView.getMediaPlayer().seek(mediaView.getMediaPlayer().getStartTime());
 
@@ -266,7 +256,7 @@ public class MediaControl extends AnchorPane implements Initializable {
                 }
             }
         });
-        
+
         runBenchmarkButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -323,9 +313,6 @@ public class MediaControl extends AnchorPane implements Initializable {
 
             }
         });
-        
-        //Play button event
-       
 
         applyListeners();
 
@@ -333,16 +320,18 @@ public class MediaControl extends AnchorPane implements Initializable {
 
     @FXML
     protected void analyzeTempo() {
-
+        
+        //Anwenden des Signalenergie-Algorithmus
         if (BPM_SOUNDENERGY_ALGORITHM.isReady()) {
 
             Thread analyzingThread1 = new Thread(new Runnable() {
+                @Override
                 public void run() {
-                    
+                    long start = System.nanoTime();
                     String BPM_1 = Integer.toString(BPM_SOUNDENERGY_ALGORITHM.get_bpm());
-                   
+                    long time_needed=TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
                     soundEnergyAlgorithmBPMField.setText(BPM_1 + " BPM");
-
+                    soundEnergyAlgorithmTime.setText(Long.toString(time_needed) + " ms");
                 }
             });
             analyzingThread1.start();
@@ -350,22 +339,31 @@ public class MediaControl extends AnchorPane implements Initializable {
         } else {
             System.out.println("not ready. (Missing WAV?)");
         }
-
+        
+        // Anwenden des Tiefpass-Peak-Algorithmus
         Thread analyzingThread2 = new Thread(new Runnable() {
+            @Override
             public void run() {
+                long start = System.nanoTime();
                 String BPM_2 = Integer.toString(BPM_PEAK_ALGORITHM.get_bpm());
-                peakAlgorithmBPMField.setText(BPM_2 + " BPM");
-
+                long time_needed=TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+                lowpassPeakAlgorithmBPMField.setText(BPM_2 + " BPM");
+                lowpassPeakAlgorithmTime.setText(Long.toString(time_needed)+ " ms");
             }
         });
         analyzingThread2.start();
-
+        
+        // Anwenden des Wavelet-Algorithmus
         if (BPM_WAVELET_ALGORITHM.isReady()) {
 
             Thread analyzingThread3 = new Thread(new Runnable() {
+                @Override
                 public void run() {
+                    long start = System.nanoTime();
                     String BPM_3 = Integer.toString(BPM_WAVELET_ALGORITHM.get_bpm());
+                    long time_needed=TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
                     waveletAlgorithmBPMField.setText(BPM_3 + " BPM");
+                    waveLetAlgorithmTime.setText(Long.toString(time_needed) + " ms");
                 }
             });
             analyzingThread3.start();
@@ -385,31 +383,29 @@ public class MediaControl extends AnchorPane implements Initializable {
                 updateValues();
             }
         });
-      
-        //When ready get Duration and update UI
+
         mediaView.getMediaPlayer().setOnReady(new Runnable() {
             @Override
             public void run() {
                 duration = mediaView.getMediaPlayer().getMedia().getDuration();
                 updateValues();
-                System.out.println("Update ready");
             }
         });
 
-     
         mediaView.getMediaPlayer().setOnEndOfMedia(new Runnable() {
             public void run() {
                 if (!repeat) {
                     playPauseButton.setText(">");
                     stopRequested = true;
                     atEndOfMedia = true;
-                  
+
                 }
             }
         });
     }
+
     @FXML
-    
+
     protected void updateValues() {
 
         if (playTime != null && timeSlider != null && volumeSlider != null) {
@@ -421,13 +417,10 @@ public class MediaControl extends AnchorPane implements Initializable {
 
                     playTime.setText(formatTime(currentTime, duration));
                     timeSlider.setDisable(duration.isUnknown());
-                    //System.out.println("UpdateValues");
 
                     if (!timeSlider.isDisabled()
                             && duration.greaterThan(Duration.ZERO)
-                            && !timeSlider.isValueChanging())
-                            
-                    {
+                            && !timeSlider.isValueChanging()) {
                         timeSlider.setValue(currentTime.divide(duration).toMillis() * 100);
                     }
                     if (!volumeSlider.isValueChanging()) {
@@ -438,12 +431,13 @@ public class MediaControl extends AnchorPane implements Initializable {
             });
         }
     }
+
     @FXML
-    public void playButtonPressed(){
+    public void playButtonPressed() {
         playPauseButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
-            
+
             public void handle(ActionEvent event) {
                 Status status = mediaView.getMediaPlayer().getStatus();
 
@@ -453,11 +447,11 @@ public class MediaControl extends AnchorPane implements Initializable {
                     case HALTED:
                         break;
                     case PAUSED:
-                     
+
                         break;
                     case READY:
                     case STOPPED:
-                      
+
                         if (atEndOfMedia) {
                             mediaView.getMediaPlayer().seek(mediaView.getMediaPlayer().getStartTime());
 
@@ -471,22 +465,35 @@ public class MediaControl extends AnchorPane implements Initializable {
             }
         });
     }
+
     @FXML
     public void timeSliderMoved() {
 
         timeSlider.valueProperty().addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable ov) {
-                if (timeSlider.isValueChanging()||timeSlider.isPressed()) {
-                    //multiply duration by percentage calculated by slider position
+                if (timeSlider.isValueChanging() || timeSlider.isPressed()) {
                     mediaView.getMediaPlayer().seek(duration.multiply(timeSlider.getValue() / 100.0));
                 }
             }
         });
     }
-
-
-
+    @FXML
+    public void ClearDisplays(){
+        
+        soundEnergyAlgorithmBPMField.setText("");
+        lowpassPeakAlgorithmBPMField.setText("");
+        waveletAlgorithmBPMField.setText("");
+        
+        soundEnergyAlgorithmTime.setText("");
+        lowpassPeakAlgorithmTime.setText("");
+        waveLetAlgorithmTime.setText("");
+        
+        soundEnergyAlgorithmProgress.setProgress(0);
+        lowpassPeakAlgorithmProgress.setProgress(0);
+        waveletAlgorithmProgress.setProgress(0);
+        
+    }
     private String formatTime(Duration elapsed, Duration duration) {
         int intElapsed = (int) Math.floor(elapsed.toSeconds());
 

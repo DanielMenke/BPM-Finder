@@ -1,31 +1,16 @@
 package bpm.finder;
 
-/**
- *
- * @author Ele
- */
 import biz.source_code.dsp.filter.FilterCharacteristicsType;
 import biz.source_code.dsp.filter.FilterPassType;
 import java.io.File;
 import java.io.IOException;
-import static java.lang.Math.sqrt;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jtransforms.fft.DoubleFFT_1D;
-import org.apache.commons.io.IOUtils;
 
 public class LowPassPeakAlgorithm {
-
-    int sampleWindow = 1024;
 
     private File currentFile;
     private WavFile wavFile;
@@ -33,13 +18,12 @@ public class LowPassPeakAlgorithm {
     int peakCount = 0;
     private WavFilter lowpassFilter;
     private long sampleRate;
-    private FilterPassType filterPassType;
-    private boolean stopped = false;
-    private FilterCharacteristicsType filterCharacteristics;
+    private final FilterPassType filterPassType;
+    private final FilterCharacteristicsType filterCharacteristics;
 
     public LowPassPeakAlgorithm() {
         this.filterPassType = FilterPassType.lowpass;
-        this.filterCharacteristics = FilterCharacteristicsType.bessel;
+        this.filterCharacteristics = FilterCharacteristicsType.butterworth;
     }
 
     public boolean setWAV(File file) {
@@ -65,44 +49,52 @@ public class LowPassPeakAlgorithm {
     }
 
     public ArrayList<Integer> getPeaksAtThreshold(double[] data, double threshold) {
+
+        // Anlegen einer Arrayliste um die Peaks über Threshold zu speichern
         ArrayList<Integer> peaks = new ArrayList<>();
         int length = data.length;
-        // get the positions of the peaks, that trepassed threshold
+
+        // Speichern aller Sample-Positionen, deren PCM-Werte sich über dem Threshold-Wert befinden
         for (int counter = 0; counter < length;) {
             if (data[counter] > threshold) {
                 peaks.add(counter);
+                // Erhöhung des Index um 10000, wenn ein Wert gespeichert wird
                 counter += 10000;
             }
             counter++;
         }
-
+        // Rückgabe der Peak-Liste
         return peaks;
     }
 
     public HashMap<Integer, Integer> countIntervalsBetweenNearbyPeaks(ArrayList<Integer> peaks) {
 
+        // Hashmap zum Speichern der Intervalle und deren Häufigkeit
         HashMap<Integer, Integer> intervalCounts = new HashMap<>();
 
+        // Für jeden gefundenen Peak-Wert...
         for (int index = 0; index < peaks.size(); index++) {
 
             int peak = peaks.get(index);
 
-            //Get distances (interval) between this peak and the next 10 peaks
-            //and count reoccuring intervals 
+            // ... werden die Positions-Abstände (Intervalle) zwischen diesem Peak und den 
+            // nächsten 10 Peaks gespeichert. Wird ein Intervall mehrfach erkannt, wird 
+            // dessen Zähler pro Auftreten um 1 erhöht
             for (int scope = 0; scope < 10; scope++) {
 
                 if ((index + scope) < peaks.size()) {
-                    //get interval
+                    //Berechnung des Abstands
                     int interval = peaks.get(index + scope) - peak;
 
-                    //check if interval is already stored
+                    // Wenn Intervall bereits vorhanden ist...
                     if (intervalCounts.containsKey(interval)) {
-                        //get the current intervalcount
+                        // ...erhöhe dessen Zähler...
                         int previousCount = intervalCounts.get(interval);
-                        //increment this intervalcount
+                        // ...um eins
                         intervalCounts.put(interval, previousCount + 1);
 
-                    } //if the interval is not already stored, store it
+                    } // Wenn ein Intervall noch nicht gespeichert ist, wird er 
+                    // neu angelegt
                     else {
                         intervalCounts.put(interval, 1);
 
@@ -110,103 +102,132 @@ public class LowPassPeakAlgorithm {
                 }
 
             }
-            mc.peakAlgorithmProgress.setProgress(mc.peakAlgorithmProgress.getProgress() + 0.1 / peaks.size());
+            //GUI-Update
+            mc.lowpassPeakAlgorithmProgress.setProgress(mc.lowpassPeakAlgorithmProgress.getProgress() + 0.1 / peaks.size());
         }
-
+        //Rückgabe der Intervall-Zähler-Wertepaare
         return intervalCounts;
     }
 
     public HashMap<Double, Integer> groupNeighborsByTempo(HashMap<Integer, Integer> intervalCounts) {
-
+        // Hashmap um Tempo-Zähler-Wertepaare zu speichern
         HashMap<Double, Integer> tempoCounts = new HashMap<>();
+
+        //Berechnen der BPM-Werte mit den ermittelten Intervall-Daten
         intervalCounts.forEach((Integer interval, Integer count) -> {
             if (interval != 0) {
+
+                // Berechnen des theoritschen Tempos pro Intervall
                 double theoreticalTempo = 60 / (interval / (double) sampleRate);
 
-                while (theoreticalTempo < 80) {
+                // Verdoppeln, bzw. halbieren der des Tempos, falls dieses nicht im angenommenen
+                // Wertebereich liegen, bis sie im angenommenen Wertebereich liegen
+                while (theoreticalTempo < 100) {
                     theoreticalTempo *= 2;
                 }
                 while (theoreticalTempo > 200) {
                     theoreticalTempo /= 2;
                 }
-
+                // Runden des gefundenen Wertes
                 theoreticalTempo = Math.round(theoreticalTempo);
 
+                // Falls das gefundene Tempo bereits erkannt wurde, wird dessen Zähler...
                 if (tempoCounts.containsKey(theoreticalTempo)) {
 
                     int previousCount = tempoCounts.get(theoreticalTempo);
 
+                    // ... um 1 erhöht
                     tempoCounts.put(theoreticalTempo, previousCount + 1);
                 } else {
+                    // Falls das Tempo noch nicht gespeichert wurde, wird es
+                    // neu angelegt
                     tempoCounts.put(theoreticalTempo, 1);
                 }
 
             }
         });
-
+        // Rückgabe der Tempo-Zähler-Wertepaare
         return tempoCounts;
 
     }
 
     public int get_bpm() {
+        // Erstellen eines Butterworth-Tiefpassfilters 4. Ordnung, Cutoff-Frequenz: 100 Hz
         lowpassFilter = new WavFilter(
                 currentFile.getPath(),
                 filterPassType,
                 filterCharacteristics,
-                6, -1, 100, 0
+                4, -1, 100, 0
         );
-        mc.peakAlgorithmProgress.setProgress(0.2);
+
+        // GUI-Update
+        mc.lowpassPeakAlgorithmProgress.setProgress(0.2);
+
         double bpm;
+
+        // Audiodaten laden
         double[][] wavData = lowpassFilter.getWavData();
-        mc.peakAlgorithmProgress.setProgress(0.25);
         double[] rawPCM = wavData[0];
-        mc.peakAlgorithmProgress.setProgress(0.3);
-        double maxPeak;
+
+        // GUI-Update
+        mc.lowpassPeakAlgorithmProgress.setProgress(0.3);
+
+        // Festlegen der Threshold-Werte: Start-Threshold, End-Threshold
         double initialThreshold = 0.9;
         double threshold = initialThreshold;
         double minThreshold = 0.3;
 
+        // Minimale Anzahl zu findendener Peaks
         int minPeaks = 30;
 
+        // Speichern der Samplerate
         sampleRate = lowpassFilter.getSampleRate();
-        maxPeak = findMaxPeak(rawPCM);
-        HashMap<Integer, Integer> intervalCounts;
-        HashMap<Double, Integer> tempoCounts;
+
+        // Anlegen der Datenstrukturen zum Speichern 
+        // der Peak-Positionen
         ArrayList<Integer> peakPositions = new ArrayList<>();
 
-        double[] buffer = new double[sampleWindow];
+        // ...der Intervall-Zähler-Wertepaare...
+        HashMap<Integer, Integer> intervalCounts;
 
-        while (peakPositions.size() < minPeaks && threshold >= minThreshold) {
+        // ...und der Tempo-Zähler-Wertepaare...
+        HashMap<Double, Integer> tempoCounts;
+
+        // Ermitteln der Peak-Positionen, bis 30 Positionen gefunden wurden...
+        while (peakPositions.size() < minPeaks
+                //... oder der minimale Threshold-Wert erreicht wurde
+                && threshold >= minThreshold) {
+
+            // Speichern der Positionen
             peakPositions = getPeaksAtThreshold(rawPCM, threshold);
-            threshold -= 0.05;
-            mc.peakAlgorithmProgress.setProgress(mc.peakAlgorithmProgress.getProgress()+0.4/(double)minPeaks);
-        }
-        
-        intervalCounts = countIntervalsBetweenNearbyPeaks(peakPositions);
-        tempoCounts = groupNeighborsByTempo(intervalCounts);
-        int maxTempo = Integer.MIN_VALUE;
 
+            // Verringern des Threshold-Wertes
+            threshold -= 0.05;
+
+            // GUI-Update
+            mc.lowpassPeakAlgorithmProgress.setProgress(mc.lowpassPeakAlgorithmProgress.getProgress() + 0.4 / (double) minPeaks);
+        }
+
+        // Speichern und zählen der emittelten Intervalle
+        intervalCounts = countIntervalsBetweenNearbyPeaks(peakPositions);
+
+        // Speichern und zählen der ermittelten Tempi
+        tempoCounts = groupNeighborsByTempo(intervalCounts);
+
+        // Ermitteln des am häufigten aufgetretenem Tempos
         bpm = Collections.max(tempoCounts.entrySet(), (entry1, entry2)
                 -> entry1.getValue() > entry2.getValue() ? 1 : -1).getKey();
 
-        int bpm_int = (int) Math.round(bpm);
-        mc.peakAlgorithmProgress.setProgress(1.0);
+        int bpm_int = (int) (bpm);
+        
+        //GUI-Update
+        mc.lowpassPeakAlgorithmProgress.setProgress(1.0);
 
+        // Rückgabe des ermittelten BPM-Werts
         return bpm_int;
     }
-
-    public double findMaxPeak(double[] data) {
-        double maxPeak = Double.MIN_VALUE;
-
-        for (double i : data) {
-            if (i > maxPeak) {
-                maxPeak = i;
-            }
-        }
-        mc.peakAlgorithmProgress.setProgress(mc.peakAlgorithmProgress.getProgress()+0.25/(data.length));
-        return maxPeak;
-    }
-
+    
+    //Einstellen der GUI
     public void setMediaControl(MediaControl mc) {
         this.mc = mc;
     }
