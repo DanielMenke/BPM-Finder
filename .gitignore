@@ -16,4 +16,4 @@ hs_err_pid*
   output.wav
 
 # CD-Rom Except
-!/CD-ROM/
+!/CD-ROM/*
