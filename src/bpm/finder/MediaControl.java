@@ -1,4 +1,3 @@
-
 package bpm.finder;
 
 import java.io.BufferedWriter;
@@ -267,7 +266,7 @@ public class MediaControl extends AnchorPane implements Initializable {
                     FileWriter fw = new FileWriter("Algorithmen Vergleich.txt");
                     BufferedWriter bw = new BufferedWriter(fw);
 
-                    File[] files = new File("D:\\pyth\\Loop 1").listFiles();
+                    File[] files = new File("").listFiles();
                     long start;
                     long time_needed;
                     for (File file : files) {
