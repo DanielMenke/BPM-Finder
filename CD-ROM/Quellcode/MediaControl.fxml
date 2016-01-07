@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="440.0" prefWidth="850.0" style="-fx-background-color: #FFFFFF;" styleClass="mainFxmlClass" stylesheets="@mediacontrol.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bpm.finder.MediaControl">
+   <children>
+      <Slider fx:id="timeSlider" layoutX="256.0" layoutY="363.0" onMouseClicked="#timeSliderMoved" prefHeight="13.0" prefWidth="338.0" />
+      <Button id="openFileButton" fx:id="openFileButton" layoutX="56.0" layoutY="391.0" mnemonicParsing="false" style="-fx-border-color: #d3d3d3;" styleClass="openFileButton" stylesheets="@mediacontrol.css" text="Datei Öffnen" />
+      <Button id="analyzeButton" fx:id="analyzeTempoButton" alignment="CENTER" disable="true" layoutX="352.0" layoutY="317.0" mnemonicParsing="false" onAction="#analyzeTempo" style="-fx-border-color: #d3d3d3;" styleClass="openFileButton" stylesheets="@mediacontrol.css" text="Tempo analysieren">
+         <font>
+            <Font name="Calibri" size="16.0" />
+         </font></Button>
+      <Pane fx:id="soundEnergyAlgortihmPanel" layoutX="56.0" layoutY="79.0" prefHeight="200.0" prefWidth="200.0" styleClass="bpmPanel">
+         <children>
+            <ProgressBar fx:id="soundEnergyAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
+            <TextField fx:id="soundEnergyAlgorithmBPMField" alignment="CENTER" editable="false" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="22.0" />
+               </font>
+            </TextField>
+            <TextField fx:id="soundEnergyAlgorithmTime" alignment="CENTER" blendMode="MULTIPLY" editable="false" layoutX="55.0" layoutY="184.0" opacity="0.7" prefHeight="21.0" prefWidth="90.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="11.0" />
+               </font>
+            </TextField>
+         </children>
+      </Pane>
+      <Pane fx:id="peakAlgortihmPanel" layoutX="325.0" layoutY="79.0" prefHeight="200.0" prefWidth="200.0" styleClass="bpmPanel">
+         <children>
+            <ProgressBar fx:id="lowpassPeakAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
+            <TextField fx:id="lowpassPeakAlgorithmBPMField" alignment="CENTER" editable="false" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="22.0" />
+               </font>
+            </TextField>
+            <TextField fx:id="lowpassPeakAlgorithmTime" alignment="CENTER" blendMode="MULTIPLY" editable="false" layoutX="56.0" layoutY="184.0" opacity="0.7" prefHeight="21.0" prefWidth="90.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="11.0" />
+               </font>
+            </TextField>
+         </children>
+      </Pane>
+      <Pane fx:id="waveletAlgortihmPanel" layoutX="594.0" layoutY="79.0" prefHeight="200.0" prefWidth="200.0" styleClass="bpmPanel">
+         <children>
+            <ProgressBar fx:id="waveletAlgorithmProgress" layoutY="186.0" prefWidth="200.0" progress="0.0" styleClass="bpmProgressBar" />
+            <TextField fx:id="waveletAlgorithmBPMField" alignment="CENTER" editable="false" layoutX="12.0" layoutY="16.0" prefHeight="169.0" prefWidth="177.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="22.0" />
+               </font>
+            </TextField>
+            <TextField fx:id="waveLetAlgorithmTime" alignment="CENTER" blendMode="MULTIPLY" editable="false" layoutX="56.0" layoutY="184.0" opacity="0.7" prefHeight="21.0" prefWidth="90.0" styleClass="bpmTextField">
+               <font>
+                  <Font name="Calibri" size="11.0" />
+               </font>
+            </TextField>
+         </children>
+      </Pane>
+      <Button id="playPauseButton" fx:id="playPauseButton" blendMode="SRC_ATOP" contentDisplay="CENTER" layoutX="419.0" layoutY="386.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#playButtonPressed" pickOnBounds="false" prefHeight="17.0" prefWidth="17.0" style="-fx-background-color: #FFFFFF;" styleClass="playPauseButton" stylesheets="@mediacontrol.css" />
+      <Slider fx:id="volumeSlider" layoutX="619.0" layoutY="337.0" majorTickUnit="30.0" minorTickCount="15" prefHeight="65.0" prefWidth="64.0" />
+      <Label layoutX="687.0" layoutY="364.0" text="Vol.">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Label>
+      <Label fx:id="playTime" layoutX="159.0" layoutY="363.0" prefHeight="14.0" prefWidth="75.0" />
+      <TextField fx:id="tracknameField" alignment="CENTER" layoutX="307.0" layoutY="24.0" prefHeight="22.0" prefWidth="237.0" styleClass="bpmTextField">
+         <font>
+            <Font name="Calibri" size="14.0" />
+         </font></TextField>
+      <Label alignment="CENTER" layoutX="83.0" layoutY="55.0" prefHeight="24.0" prefWidth="152.0" styleClass="bpmTextField" text="Signalenergie-Algorithmus">
+         <font>
+            <Font name="Calibri" size="13.0" />
+         </font>
+      </Label>
+      <Label alignment="CENTER" layoutX="350.0" layoutY="55.0" prefHeight="24.0" prefWidth="152.0" styleClass="bpmTextField" text="Tiefpass-Peak-Algorithmus">
+         <font>
+            <Font name="Calibri" size="13.0" />
+         </font>
+      </Label>
+      <Label alignment="CENTER" layoutX="618.0" layoutY="55.0" prefHeight="24.0" prefWidth="152.0" styleClass="bpmTextField" text="Wavelet-Algorithums">
+         <font>
+            <Font name="Calibri" size="13.0" />
+         </font>
+      </Label>
+   </children>
+</AnchorPane>

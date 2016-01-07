@@ -1,0 +1,32 @@
+/*
+ * Empty Stylesheet file.
+ */
+
+.mainFxmlClass {
+
+}
+.playPauseButton{
+    -fx-graphic: url("../../img/key_play_pause.png")
+}
+.playPauseButton:hover{
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5),10,0,0,0);
+}
+.playPauseButton:armed{
+    -fx-graphic: url("../../img/key_play_pause_2.png")
+}
+.bpmPanel{
+    -fx-border-color: #d3d3d3
+}
+
+.bpmTextField{
+    -fx-background-color:#ffffff
+}
+.bpmProgressBar{
+    -fx-accent: palegreen
+}
+.openFileButton:hover{
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5),10,0,0,0);
+}
+.openFileButton:armed{
+    -fx-base:#545454
+}

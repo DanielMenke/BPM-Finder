@@ -21,10 +21,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.scene.media.*;
 
-/**
- *
- * @author Ele
- */
 public class AudioPlayer extends Application {
     private final static String DEFAULT_MEDIA =  
             "http://download.oracle.com/otndocs/products/javafx/oow2010-2.flv";
