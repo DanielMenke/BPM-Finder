@@ -8,17 +8,12 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="BPM-Finder.jar" size="63792" download="eager" />
+    <jar href="BPM-Finder.jar" size="68581" download="eager" />
     <jar href="lib\JLargeArrays-1.2.jar" size="76482" download="eager" />
-    <jar href="lib\JLargeArrays-1.4.jar" size="121537" download="eager" />
-    <jar href="lib\JTransforms-2.4(1).jar" size="800539" download="eager" />
-    <jar href="lib\JTransforms-2.4-sources.jar" size="224604" download="eager" />
-    <jar href="lib\JTransforms-3.0-sources.jar" size="259715" download="eager" />
     <jar href="lib\JTransforms-3.0.jar" size="970218" download="eager" />
     <jar href="lib\commons-io-2.4.jar" size="185140" download="eager" />
     <jar href="lib\commons-lang3-3.4.jar" size="434678" download="eager" />
     <jar href="lib\dsp-collection.jar" size="105331" download="eager" />
-    <jar href="lib\jtransforms-2.4.jar" size="498954" download="eager" />
     <jar href="lib\jwave-1.0.3.jar" size="118269" download="eager" />
   </resources>
   <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="BPM-Finder" >
